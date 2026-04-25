@@ -11,7 +11,16 @@
         </nav>
         <div class="card post-card float-in float-in-delay-1">
             <div class="card-body p-4">
-                <div class="encrypt-badge mb-3"><span class="dot"></span> DECRYPTED FROM RSA STORAGE</div>
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                    <div class="encrypt-badge"><span class="dot"></span> ECC E2E ENCRYPTED MESSAGE</div>
+                    {% if hmac_ok is true %}
+                    <div class="hmac-badge verified">✓ HMAC INTEGRITY VERIFIED</div>
+                    {% elif hmac_ok is false %}
+                    <div class="hmac-badge tampered">✗ INTEGRITY CHECK FAILED</div>
+                    {% else %}
+                    <div class="hmac-badge unknown">· HMAC UNVERIFIED</div>
+                    {% endif %}
+                </div>
                 <h2 style="font-size: 1.3rem; letter-spacing: 1px;">{{ message.subject }}</h2>
                 <div style="font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 1rem;">
                     <span style="color: var(--cyan);">From:</span> {{ message.sender_name }}
@@ -22,11 +31,24 @@
                 </div>
                 <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
                 <div class="post-content">{{ message.content | nl2br }}</div>
+                {% if documents %}
+                <div style="border-top: 1px solid var(--glass-border); margin-top: 1.2rem; padding-top: 1rem;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 0.6rem;">ATTACHMENTS</div>
+                    {% for doc in documents %}
+                    <a href="{{ url_for('posts.download_document', doc_id=doc.id) }}"
+                       class="btn btn-outline-secondary btn-sm me-2 mb-1"
+                       style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">
+                        ⬇ {{ doc.filename }}
+                        <span style="color:var(--text-muted);margin-left:4px;">({{ (doc.file_size / 1024)|round(1) }} KB)</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
         </div>
         <div class="mt-3 float-in float-in-delay-2">
             {% if message.sender_id and message.sender_id != g.user.id %}
-            <a href="{{ url_for('messages.compose') }}" class="btn btn-outline-primary">Reply</a>
+            <a href="{{ url_for('messages.compose') }}?to={{ message.sender_id }}" class="btn btn-outline-primary">↩ Reply</a>
             {% endif %}
             <a href="{{ url_for('messages.inbox') }}" class="btn btn-outline-secondary">← Inbox</a>
             <form method="POST" action="{{ url_for('messages.delete_message', msg_id=message.id) }}"

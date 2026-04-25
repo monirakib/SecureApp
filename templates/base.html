@@ -37,10 +37,19 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('friends.friends_page') }}">
+                                ◈ Friends
+                                {% if g.pending_friend_requests %}<span class="badge bg-warning text-dark" style="font-size: 0.6rem;">{{ g.pending_friend_requests }}</span>{% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('deaddrops.dead_drops_page') }}">☠ Dead Drops</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('profile.view_profile') }}">◉ Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('sessions.my_sessions') }}" title="Manage active sessions">⊞ Sessions</a>
                         </li>
                         {% if g.user.role == 'admin' %}
                         <li class="nav-item dropdown">

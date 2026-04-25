@@ -6,7 +6,7 @@
         <h2 class="section-title float-in">CREATE DEAD DROP</h2>
         <div class="card neon-card float-in float-in-delay-1">
             <div class="card-body p-4">
-                <form method="POST" action="{{ url_for('deaddrops.create_dead_drop') }}">
+                <form method="POST" action="{{ url_for('deaddrops.create_dead_drop') }}" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="codename" class="form-label">Your Codename (optional)</label>
                         <input type="text" class="form-control" id="codename" name="codename"
@@ -21,6 +21,11 @@
                         <label for="content" class="form-label">Secret Message</label>
                         <textarea class="form-control" id="content" name="content"
                                   rows="6" required placeholder="This message will self-destruct after being read once..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="document" class="form-label">Attachment <span style="color:var(--text-muted);font-size:0.8rem;">(optional, max 2 MB — also self-destructs)</span></label>
+                        <input type="file" class="form-control" id="document" name="document">
+                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;">File is RSA-encrypted and deleted permanently when the drop is accessed</div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">⬡ CREATE DEAD DROP</button>
                 </form>

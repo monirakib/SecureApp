@@ -150,6 +150,37 @@ class KeyManager:
         print("[KeyManager] RSA keys rotated successfully.")
         return old_public, old_private
 
+    def rotate_hmac_keys(self):
+        """Rotate HMAC keys. Old keys returned for any re-verification needed.
+        WARNING: all existing HMACs computed with old keys will no longer verify.
+        """
+        old_session_key = self.hmac_session_key
+        old_data_key = self.hmac_data_key
+
+        print("[KeyManager] Generating new HMAC keys...")
+        self.hmac_session_key = os.urandom(32)
+        self.hmac_data_key = os.urandom(32)
+
+        hmac_path = os.path.join(KEYS_DIR, 'hmac_keys.json')
+
+        # Archive old HMAC keys
+        archive_path = os.path.join(KEYS_DIR, f'hmac_keys_old_{sha256_hex(os.urandom(8))[:8]}.json')
+        with open(archive_path, 'w') as f:
+            json.dump({
+                'session_key': old_session_key.hex(),
+                'data_key': old_data_key.hex()
+            }, f)
+
+        # Save new HMAC keys
+        with open(hmac_path, 'w') as f:
+            json.dump({
+                'session_key': self.hmac_session_key.hex(),
+                'data_key': self.hmac_data_key.hex()
+            }, f)
+
+        print("[KeyManager] HMAC keys rotated successfully.")
+        return old_session_key, old_data_key
+
 
 # Singleton instance
 key_manager = KeyManager()

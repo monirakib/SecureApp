@@ -142,6 +142,18 @@ def init_db():
             created_at TEXT DEFAULT (datetime('now')),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
         );
+
+        CREATE TABLE IF NOT EXISTS friendships (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            requester_id INTEGER NOT NULL,
+            addressee_id INTEGER NOT NULL,
+            status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'accepted', 'declined')),
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT,
+            UNIQUE(requester_id, addressee_id),
+            FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (addressee_id) REFERENCES users(id) ON DELETE CASCADE
+        );
     ''')
 
     conn.commit()
@@ -159,12 +171,32 @@ def _migrate_posts_table():
         "ALTER TABLE posts ADD COLUMN urgency TEXT DEFAULT 'medium'",
         "ALTER TABLE posts ADD COLUMN is_anonymous INTEGER DEFAULT 0",
         "ALTER TABLE posts ADD COLUMN anonymous_codename TEXT DEFAULT ''",
+        "ALTER TABLE documents ADD COLUMN message_id INTEGER",
+        "ALTER TABLE documents ADD COLUMN dead_drop_id INTEGER",
     ]
     for sql in migrations:
         try:
             conn.execute(sql)
         except sqlite3.OperationalError:
             pass  # Column already exists
+    conn.commit()
+    conn.close()
+
+    # Ensure friendships table exists (in case DB was created before this version)
+    conn = get_db()
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS friendships (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            requester_id INTEGER NOT NULL,
+            addressee_id INTEGER NOT NULL,
+            status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'accepted', 'declined')),
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT,
+            UNIQUE(requester_id, addressee_id),
+            FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (addressee_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -334,6 +366,25 @@ def delete_user_sessions(user_id):
     conn.close()
 
 
+def delete_session(token_hash):
+    """Delete a single session by its token hash."""
+    conn = get_db()
+    conn.execute("DELETE FROM sessions WHERE token_hash = ?", (token_hash,))
+    conn.commit()
+    conn.close()
+
+
+def get_user_sessions(user_id):
+    """Get all active (non-expired) sessions for a user."""
+    conn = get_db()
+    sessions = conn.execute(
+        "SELECT * FROM sessions WHERE user_id = ? AND expires_at > datetime('now') ORDER BY created_at DESC",
+        (user_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(s) for s in sessions]
+
+
 def cleanup_expired_sessions():
     conn = get_db()
     conn.execute("DELETE FROM sessions WHERE expires_at < datetime('now')")
@@ -458,13 +509,15 @@ def count_tips_by_status(status):
 # ---- Document operations ----
 
 def create_document(original_filename_enc, stored_filename, file_size, symmetric_key_enc,
-                    uploaded_by=None, post_id=None, tip_id=None, data_hmac=''):
+                    uploaded_by=None, post_id=None, tip_id=None, message_id=None,
+                    dead_drop_id=None, data_hmac=''):
     conn = get_db()
     conn.execute(
         """INSERT INTO documents (original_filename_enc, stored_filename, file_size, symmetric_key_enc,
-           uploaded_by, post_id, tip_id, data_hmac) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+           uploaded_by, post_id, tip_id, message_id, dead_drop_id, data_hmac)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (original_filename_enc, stored_filename, file_size, symmetric_key_enc,
-         uploaded_by, post_id, tip_id, data_hmac)
+         uploaded_by, post_id, tip_id, message_id, dead_drop_id, data_hmac)
     )
     conn.commit()
     doc_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
@@ -482,6 +535,20 @@ def get_documents_by_post(post_id):
 def get_documents_by_tip(tip_id):
     conn = get_db()
     docs = conn.execute("SELECT * FROM documents WHERE tip_id = ? ORDER BY created_at DESC", (tip_id,)).fetchall()
+    conn.close()
+    return [dict(d) for d in docs]
+
+
+def get_documents_by_message(message_id):
+    conn = get_db()
+    docs = conn.execute("SELECT * FROM documents WHERE message_id = ? ORDER BY created_at DESC", (message_id,)).fetchall()
+    conn.close()
+    return [dict(d) for d in docs]
+
+
+def get_documents_by_dead_drop(dead_drop_id):
+    conn = get_db()
+    docs = conn.execute("SELECT * FROM documents WHERE dead_drop_id = ? ORDER BY created_at DESC", (dead_drop_id,)).fetchall()
     conn.close()
     return [dict(d) for d in docs]
 
@@ -658,5 +725,169 @@ def get_audit_log(limit=100):
 def count_audit_entries():
     conn = get_db()
     count = conn.execute("SELECT COUNT(*) FROM audit_log").fetchone()[0]
+    conn.close()
+    return count
+
+
+# ---- Friendship operations ----
+
+def send_friend_request(requester_id, addressee_id):
+    """Send a friend request. Returns a status string."""
+    conn = get_db()
+    # Check for any existing relationship in either direction
+    existing = conn.execute(
+        """SELECT * FROM friendships
+           WHERE (requester_id = ? AND addressee_id = ?)
+              OR (requester_id = ? AND addressee_id = ?)""",
+        (requester_id, addressee_id, addressee_id, requester_id)
+    ).fetchone()
+
+    if existing:
+        existing = dict(existing)
+        conn.close()
+        if existing['status'] == 'accepted':
+            return 'already_friends'
+        if existing['status'] == 'pending':
+            if existing['requester_id'] == requester_id:
+                return 'already_requested'
+            else:
+                return 'pending_from_them'
+        if existing['status'] == 'declined':
+            # Allow re-requesting if previously declined
+            conn = get_db()
+            conn.execute(
+                """UPDATE friendships SET requester_id=?, addressee_id=?, status='pending',
+                   updated_at=datetime('now')
+                   WHERE (requester_id=? AND addressee_id=?) OR (requester_id=? AND addressee_id=?)""",
+                (requester_id, addressee_id, requester_id, addressee_id, addressee_id, requester_id)
+            )
+            conn.commit()
+            conn.close()
+            return 'sent'
+
+    try:
+        conn.execute(
+            "INSERT INTO friendships (requester_id, addressee_id) VALUES (?, ?)",
+            (requester_id, addressee_id)
+        )
+        conn.commit()
+        conn.close()
+        return 'sent'
+    except Exception:
+        conn.close()
+        return 'error'
+
+
+def accept_friend_request(friendship_id, addressee_id):
+    """Accept a pending friend request. Only the addressee can accept."""
+    conn = get_db()
+    conn.execute(
+        """UPDATE friendships SET status='accepted', updated_at=datetime('now')
+           WHERE id=? AND addressee_id=? AND status='pending'""",
+        (friendship_id, addressee_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def decline_friend_request(friendship_id, addressee_id):
+    """Decline a pending friend request."""
+    conn = get_db()
+    conn.execute(
+        """UPDATE friendships SET status='declined', updated_at=datetime('now')
+           WHERE id=? AND addressee_id=? AND status='pending'""",
+        (friendship_id, addressee_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def cancel_friend_request(friendship_id, requester_id):
+    """Cancel an outgoing pending friend request."""
+    conn = get_db()
+    conn.execute(
+        "DELETE FROM friendships WHERE id=? AND requester_id=? AND status='pending'",
+        (friendship_id, requester_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def remove_friend(user_id1, user_id2):
+    """Remove an accepted friendship."""
+    conn = get_db()
+    conn.execute(
+        """DELETE FROM friendships
+           WHERE status='accepted'
+             AND ((requester_id=? AND addressee_id=?) OR (requester_id=? AND addressee_id=?))""",
+        (user_id1, user_id2, user_id2, user_id1)
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_friendship_by_id(friendship_id):
+    conn = get_db()
+    row = conn.execute("SELECT * FROM friendships WHERE id=?", (friendship_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_pending_requests_received(user_id):
+    """Get all pending friend requests sent TO this user."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT * FROM friendships WHERE addressee_id=? AND status='pending' ORDER BY created_at DESC",
+        (user_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_pending_requests_sent(user_id):
+    """Get all pending friend requests sent BY this user."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT * FROM friendships WHERE requester_id=? AND status='pending' ORDER BY created_at DESC",
+        (user_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_friends(user_id):
+    """Get all accepted friends of a user."""
+    conn = get_db()
+    rows = conn.execute(
+        """SELECT * FROM friendships
+           WHERE status='accepted'
+             AND (requester_id=? OR addressee_id=?)
+           ORDER BY updated_at DESC""",
+        (user_id, user_id)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def are_friends(user_id1, user_id2):
+    """Return True if the two users have an accepted friendship."""
+    conn = get_db()
+    row = conn.execute(
+        """SELECT id FROM friendships
+           WHERE status='accepted'
+             AND ((requester_id=? AND addressee_id=?) OR (requester_id=? AND addressee_id=?))""",
+        (user_id1, user_id2, user_id2, user_id1)
+    ).fetchone()
+    conn.close()
+    return row is not None
+
+
+def count_pending_friend_requests(user_id):
+    """Count pending friend requests received by a user (for navbar badge)."""
+    conn = get_db()
+    count = conn.execute(
+        "SELECT COUNT(*) FROM friendships WHERE addressee_id=? AND status='pending'",
+        (user_id,)
+    ).fetchone()[0]
     conn.close()
     return count

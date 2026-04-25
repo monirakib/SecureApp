@@ -911,3 +911,270 @@ footer {
 .stat-card.pink { border-color: rgba(255,0,102,0.3); }
 .stat-card.pink .stat-number { color: #ff0066; text-shadow: 0 0 20px rgba(255,0,102,0.5); }
 .stat-card.pink .stat-label { color: rgba(255,0,102,0.7); }
+
+/* =====================================================
+   FEED DASHBOARD - Modern Components
+   ===================================================== */
+
+/* Feed header wrapper */
+.feed-header {
+    margin-bottom: 1.5rem;
+}
+
+.feed-subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+/* Live indicator */
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--green);
+    background: var(--green-dim);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 20px;
+    padding: 3px 10px;
+}
+
+.live-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--green);
+    animation: livePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 6px var(--green); }
+    50% { opacity: 0.5; transform: scale(0.75); box-shadow: 0 0 2px var(--green); }
+}
+
+/* Stats strip */
+.feed-stats-strip {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    margin-top: 1rem;
+    backdrop-filter: blur(15px);
+    overflow-x: auto;
+}
+
+.feed-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 90px;
+    flex: 1;
+}
+
+.feed-stat-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--cyan);
+    text-shadow: 0 0 15px var(--cyan-glow);
+    line-height: 1;
+}
+
+.feed-stat-lbl {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.52rem;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.feed-stat-sep {
+    width: 1px;
+    height: 36px;
+    background: var(--glass-border);
+    flex-shrink: 0;
+    margin: 0 1rem;
+}
+
+/* Filter bar */
+.filter-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.filter-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--glass-border);
+    flex-shrink: 0;
+}
+
+/* Post card improvements */
+.post-card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.post-card-excerpt {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.post-card-footer {
+    border-top: 1px solid var(--glass-border);
+    padding-top: 0.65rem;
+    margin-top: auto;
+}
+
+.post-author-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+}
+
+.post-author-chip.anon {
+    color: var(--purple);
+}
+
+.post-doc-chip {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.post-date-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+}
+
+.post-read-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--cyan);
+    text-decoration: none;
+    border: 1px solid var(--cyan);
+    border-radius: 4px;
+    padding: 3px 10px;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.post-read-btn:hover {
+    background: var(--cyan-dim);
+    color: var(--cyan);
+    text-shadow: 0 0 8px var(--cyan-glow);
+    text-decoration: none;
+}
+
+/* Urgency-colored left border override on post cards */
+.post-urgency-critical { border-left-color: #ff3333 !important; }
+.post-urgency-high     { border-left-color: #ff8c00 !important; }
+.post-urgency-medium   { border-left-color: #ffd700 !important; }
+.post-urgency-low      { border-left-color: var(--green) !important; }
+
+/* =====================================================
+   HMAC INTEGRITY BADGES
+   ===================================================== */
+
+.hmac-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.5px;
+    border-radius: 4px;
+    padding: 2px 8px;
+    border: 1px solid;
+}
+
+.hmac-badge.verified {
+    color: var(--green);
+    background: rgba(0, 255, 136, 0.06);
+    border-color: rgba(0, 255, 136, 0.2);
+}
+
+.hmac-badge.tampered {
+    color: var(--pink);
+    background: rgba(255, 0, 102, 0.06);
+    border-color: rgba(255, 0, 102, 0.3);
+}
+
+.hmac-badge.unknown {
+    color: var(--text-muted);
+    background: rgba(136, 136, 170, 0.05);
+    border-color: rgba(136, 136, 170, 0.15);
+}
+
+/* =====================================================
+   SESSION MANAGEMENT
+   ===================================================== */
+
+.session-row-current {
+    background: rgba(0, 240, 255, 0.04) !important;
+    border: 1px solid rgba(0, 240, 255, 0.15) !important;
+    border-radius: 6px;
+}
+
+.session-ip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--cyan);
+}
+
+.session-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* =====================================================
+   RESPONSIVE ADDITIONS
+   ===================================================== */
+
+@media (max-width: 768px) {
+    .feed-stats-strip { padding: 0.6rem 1rem; }
+    .feed-stat-num { font-size: 1.2rem; }
+    .feed-stat-sep { margin: 0 0.5rem; }
+    .feed-stat { min-width: 70px; }
+}

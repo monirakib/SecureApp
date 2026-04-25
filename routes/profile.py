@@ -31,6 +31,7 @@ def view_profile():
         phone = ''
 
     profile = {
+        'id': user['id'],
         'username': username,
         'email': email,
         'phone': phone,

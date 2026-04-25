@@ -17,6 +17,20 @@
                 </p>
                 <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
                 <div class="post-content">{{ drop.content | nl2br }}</div>
+                {% if attached_files %}
+                <div style="border-top: 1px solid rgba(255,0,102,0.2); margin-top: 1.2rem; padding-top: 1rem;">
+                    <div style="font-size:0.75rem;color:var(--pink);letter-spacing:1px;margin-bottom:0.6rem;">ATTACHMENTS — DOWNLOAD NOW (WILL NOT BE AVAILABLE AGAIN)</div>
+                    {% for f in attached_files %}
+                    <a href="data:application/octet-stream;base64,{{ f.data_b64 }}"
+                       download="{{ f.filename }}"
+                       class="btn btn-sm me-2 mb-1"
+                       style="border:1px solid var(--pink);color:var(--pink);font-family:'JetBrains Mono',monospace;font-size:0.8rem;">
+                        ⬇ {{ f.filename }}
+                        <span style="color:var(--text-muted);margin-left:4px;">({{ (f.size / 1024)|round(1) }} KB)</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
         </div>
         <div class="text-center mt-3 float-in float-in-delay-2">

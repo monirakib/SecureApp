@@ -28,6 +28,8 @@ from routes.feed import feed_bp
 from routes.tips import tips_bp
 from routes.messages import messages_bp
 from routes.deaddrops import deaddrops_bp
+from routes.friends import friends_bp
+from routes.sessions import sessions_bp
 
 
 def create_app():
@@ -43,6 +45,8 @@ def create_app():
     app.register_blueprint(tips_bp)
     app.register_blueprint(messages_bp)
     app.register_blueprint(deaddrops_bp)
+    app.register_blueprint(friends_bp)
+    app.register_blueprint(sessions_bp)
 
     # Custom template filter for newlines
     @app.template_filter('nl2br')
@@ -106,6 +110,7 @@ def create_app():
         if user:
             g.user = user
             g.csrf_token = session['csrf_token']
+            g.current_session_hash = token_hash  # expose for session management page
             # Decrypt display name
             try:
                 g.user_display_name = key_manager.decrypt_user_data(user['username_enc'])
@@ -113,6 +118,8 @@ def create_app():
                 g.user_display_name = 'User'
             # Unread message count for navbar
             g.unread_count = db.count_unread_messages(user['id'])
+            # Pending friend requests for navbar badge
+            g.pending_friend_requests = db.count_pending_friend_requests(user['id'])
 
     # Cleanup expired sessions periodically
     @app.before_request

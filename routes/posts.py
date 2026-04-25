@@ -13,7 +13,7 @@ import database as db
 from key_management import key_manager
 from crypto.ecc import (ecc_encrypt_string, ecc_decrypt_string,
                          deserialize_ecc_public_key, serialize_ecc_public_key)
-from crypto.symmetric import generate_symmetric_key, encrypt_symmetric, decrypt_symmetric
+from crypto.rsa import rsa_encrypt_bytes, rsa_decrypt_bytes
 from codenames import generate_codename
 from routes import login_required
 
@@ -153,7 +153,14 @@ def view_post(post_id):
         dec_docs.append({**doc, 'filename': fname})
     decrypted['documents'] = dec_docs
 
-    return render_template('view_post.html', post=decrypted)
+    # HMAC integrity verification
+    hmac_ok = None
+    if post.get('data_hmac'):
+        hmac_ok = key_manager.verify_data_hmac(
+            post['data_hmac'], post['title_enc'], post['content_enc'], post['user_id']
+        )
+
+    return render_template('view_post.html', post=decrypted, hmac_ok=hmac_ok)
 
 
 @posts_bp.route('/posts/<int:post_id>/edit', methods=['GET', 'POST'])
@@ -218,7 +225,8 @@ def delete_post(post_id):
     return redirect(url_for('posts.my_posts'))
 
 
-def _handle_file_upload(post_id=None, tip_id=None):
+def _handle_file_upload(post_id=None, tip_id=None, message_id=None, dead_drop_id=None,
+                        uploaded_by=None):
     """Handle file upload from form, encrypt and store."""
     file = request.files.get('document')
     if not file or not file.filename:
@@ -239,9 +247,8 @@ def _handle_file_upload(post_id=None, tip_id=None):
     # Read file data
     file_data = file.read()
 
-    # Generate symmetric key and encrypt
-    sym_key = generate_symmetric_key()
-    encrypted_data = encrypt_symmetric(file_data, sym_key)
+    # Encrypt file data directly with system RSA (asymmetric — no symmetric key)
+    encrypted_data = rsa_encrypt_bytes(file_data, key_manager.rsa_public_key).encode('utf-8')
 
     # Store encrypted file
     os.makedirs(config.UPLOAD_DIR, exist_ok=True)
@@ -252,18 +259,22 @@ def _handle_file_upload(post_id=None, tip_id=None):
 
     # Encrypt metadata with RSA
     original_filename_enc = key_manager.encrypt_user_data(file.filename)
-    symmetric_key_enc = key_manager.encrypt_user_data(sym_key.hex())
+    symmetric_key_enc = ''  # Not used — file encrypted directly with RSA
 
     data_hmac = key_manager.compute_data_hmac(original_filename_enc, stored_filename)
+
+    uploader = uploaded_by if uploaded_by is not None else (g.user['id'] if g.user else None)
 
     doc_id = db.create_document(
         original_filename_enc=original_filename_enc,
         stored_filename=stored_filename,
         file_size=size,
         symmetric_key_enc=symmetric_key_enc,
-        uploaded_by=g.user['id'] if g.user else None,
+        uploaded_by=uploader,
         post_id=post_id,
         tip_id=tip_id,
+        message_id=message_id,
+        dead_drop_id=dead_drop_id,
         data_hmac=data_hmac
     )
 
@@ -278,13 +289,20 @@ def download_document(doc_id):
     if not doc:
         abort(404)
 
-    # Decrypt symmetric key
-    try:
-        symmetric_key_hex = key_manager.decrypt_user_data(doc['symmetric_key_enc'])
-        symmetric_key = bytes.fromhex(symmetric_key_hex)
-    except Exception:
-        flash('Could not decrypt document.', 'danger')
-        abort(500)
+    # Authorize: check the user is allowed to access this document
+    if doc.get('post_id'):
+        post = db.get_post_by_id(doc['post_id'])
+        if not post:
+            abort(403)
+        # Any authenticated user can read posts (public feed)
+    elif doc.get('message_id'):
+        msg = db.get_message_by_id(doc['message_id'])
+        if not msg or (msg['sender_id'] != g.user['id'] and msg['recipient_id'] != g.user['id']):
+            abort(403)
+    elif doc.get('tip_id'):
+        if g.user.get('role') != 'admin':
+            abort(403)
+    # dead_drop_id docs are served inline during access; no auth-gated download
 
     # Read encrypted file
     file_path = os.path.join(config.UPLOAD_DIR, doc['stored_filename'])
@@ -294,8 +312,12 @@ def download_document(doc_id):
     with open(file_path, 'rb') as f:
         encrypted_data = f.read()
 
-    # Decrypt
-    decrypted_data = decrypt_symmetric(encrypted_data, symmetric_key)
+    # Decrypt file data with system RSA (asymmetric — matches upload side)
+    try:
+        decrypted_data = rsa_decrypt_bytes(encrypted_data.decode('utf-8'), key_manager.rsa_private_key)
+    except Exception:
+        flash('Could not decrypt document.', 'danger')
+        abort(500)
 
     # Decrypt original filename
     try:

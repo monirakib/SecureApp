@@ -106,6 +106,57 @@ def rsa_decrypt_string(ciphertext, private_key):
     return decrypted[4:4 + original_len].decode('utf-8')
 
 
+def rsa_encrypt_bytes(data, public_key):
+    """Encrypt raw bytes using RSA with chunking.
+
+    Same chunked approach as rsa_encrypt_string but operates on arbitrary bytes,
+    so binary file data can be encrypted without UTF-8 constraints.
+    Returns hex-encoded chunks joined by ':'.
+    """
+    e, n = public_key
+    key_size = (n.bit_length() + 7) // 8
+    chunk_size = key_size - 1  # Ensure each chunk < n
+
+    # Prepend 4-byte length header
+    payload = len(data).to_bytes(4, 'big') + data
+
+    # Pad to multiple of chunk_size
+    remainder = len(payload) % chunk_size
+    if remainder != 0:
+        payload += b'\x00' * (chunk_size - remainder)
+
+    encrypted_chunks = []
+    for i in range(0, len(payload), chunk_size):
+        chunk = payload[i:i + chunk_size]
+        m = int.from_bytes(chunk, 'big')
+        c = rsa_encrypt_int(m, (e, n))
+        encrypted_chunks.append(format(c, '0' + str(key_size * 2) + 'x'))
+
+    return ':'.join(encrypted_chunks)
+
+
+def rsa_decrypt_bytes(ciphertext, private_key):
+    """Decrypt RSA-encrypted bytes produced by rsa_encrypt_bytes.
+
+    Returns the original raw bytes.
+    """
+    d, n = private_key
+    key_size = (n.bit_length() + 7) // 8
+    chunk_size = key_size - 1
+
+    chunks = ciphertext.split(':')
+    decrypted = b''
+
+    for chunk_hex in chunks:
+        c = int(chunk_hex, 16)
+        m = rsa_decrypt_int(c, (d, n))
+        decrypted += m.to_bytes(chunk_size, 'big')
+
+    # Extract original length from first 4 bytes
+    original_len = int.from_bytes(decrypted[:4], 'big')
+    return decrypted[4:4 + original_len]
+
+
 def serialize_rsa_key(key):
     """Serialize an RSA key (public or private) to a string for storage."""
     first, n = key

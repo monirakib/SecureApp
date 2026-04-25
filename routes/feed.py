@@ -60,7 +60,12 @@ def public_feed():
             'has_documents': db.count_post_documents(post['id']) > 0
         })
 
+    total_count = db.count_posts()
+    critical_count = sum(1 for p in decrypted_posts if p['urgency'] == 'critical')
+
     return render_template('feed.html',
                            posts=decrypted_posts,
                            category_filter=category_filter,
-                           urgency_filter=urgency_filter)
+                           urgency_filter=urgency_filter,
+                           total_count=total_count,
+                           critical_count=critical_count)

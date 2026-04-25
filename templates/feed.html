@@ -1,22 +1,57 @@
 {% extends "base.html" %}
 {% block title %}Report Feed - SecureApp{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4 float-in">
-    <h2 class="section-title mb-0">REPORT FEED</h2>
-    <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary">+ SUBMIT REPORT</a>
+
+{# ── FEED HEADER ── #}
+<div class="feed-header float-in">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-3 mb-1">
+                <h2 class="section-title mb-0">REPORT FEED</h2>
+                <div class="live-indicator"><span class="live-dot"></span>LIVE</div>
+            </div>
+            <p class="feed-subtitle">End-to-end encrypted reports · ECC ElGamal secp256k1 · HMAC-SHA256 verified</p>
+        </div>
+        <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary align-self-start">+ SUBMIT REPORT</a>
+    </div>
+
+    {# Stats strip #}
+    <div class="feed-stats-strip float-in float-in-delay-1">
+        <div class="feed-stat">
+            <span class="feed-stat-num">{{ total_count }}</span>
+            <span class="feed-stat-lbl">TOTAL REPORTS</span>
+        </div>
+        <div class="feed-stat-sep"></div>
+        <div class="feed-stat">
+            <span class="feed-stat-num" style="color: var(--pink);">{{ critical_count }}</span>
+            <span class="feed-stat-lbl">CRITICAL</span>
+        </div>
+        <div class="feed-stat-sep"></div>
+        <div class="feed-stat">
+            <span class="feed-stat-num" style="color: var(--green);">{{ posts|length }}</span>
+            <span class="feed-stat-lbl">{{ 'FILTERED' if (category_filter or urgency_filter) else 'SHOWING' }}</span>
+        </div>
+        <div class="feed-stat-sep"></div>
+        <div class="feed-stat">
+            <span class="feed-stat-num" style="color: var(--cyan); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;">ECC·RSA·HMAC</span>
+            <span class="feed-stat-lbl">ENCRYPTION STACK</span>
+        </div>
+    </div>
 </div>
 
-<div class="card mb-4 float-in float-in-delay-1">
-    <div class="card-body py-2">
+{# ── FILTER BAR ── #}
+<div class="card mb-4 float-in float-in-delay-2">
+    <div class="card-body py-2 px-3">
         <form method="GET" class="d-flex gap-3 align-items-center flex-wrap">
-            <span style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.65rem; letter-spacing: 2px;">FILTER:</span>
-            <select name="category" class="form-select form-select-sm" style="width: auto;">
+            <span class="filter-label">FILTER</span>
+            <div class="filter-sep"></div>
+            <select name="category" class="form-select form-select-sm" style="width: auto; min-width: 140px;">
                 <option value="">All Categories</option>
                 {% for cat in ['corruption', 'fraud', 'safety', 'harassment', 'environmental', 'corporate', 'government', 'other'] %}
                 <option value="{{ cat }}" {{ 'selected' if category_filter == cat }}>{{ cat|capitalize }}</option>
                 {% endfor %}
             </select>
-            <select name="urgency" class="form-select form-select-sm" style="width: auto;">
+            <select name="urgency" class="form-select form-select-sm" style="width: auto; min-width: 120px;">
                 <option value="">All Urgency</option>
                 {% for urg in ['critical', 'high', 'medium', 'low'] %}
                 <option value="{{ urg }}" {{ 'selected' if urgency_filter == urg }}>{{ urg|capitalize }}</option>
@@ -24,49 +59,72 @@
             </select>
             <button type="submit" class="btn btn-outline-primary btn-sm">Apply</button>
             {% if category_filter or urgency_filter %}
-            <a href="{{ url_for('feed.public_feed') }}" class="btn btn-outline-secondary btn-sm">Clear</a>
+            <a href="{{ url_for('feed.public_feed') }}" class="btn btn-outline-secondary btn-sm">✕ Clear</a>
             {% endif %}
+            <span class="ms-auto" style="color: var(--text-muted); font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;">
+                {{ posts|length }} result{{ 's' if posts|length != 1 }}
+            </span>
         </form>
     </div>
 </div>
 
+{# ── POST GRID ── #}
 {% if posts %}
-<div class="row">
+<div class="row g-3">
     {% for post in posts %}
-    <div class="col-md-6 col-lg-4 mb-3 float-in float-in-delay-{{ loop.index0 % 6 + 1 }}">
-        <div class="card post-card h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
+    <div class="col-md-6 col-lg-4 float-in float-in-delay-{{ loop.index0 % 6 + 1 }}">
+        <div class="card post-card post-urgency-{{ post.urgency }} h-100">
+            <div class="card-body d-flex flex-column p-3">
+
+                {# Badge row #}
+                <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="category-badge category-{{ post.category }}">{{ post.category|upper }}</span>
                     <span class="urgency-badge urgency-{{ post.urgency }}">{{ post.urgency|upper }}</span>
                 </div>
-                <h5 class="card-title mt-2" style="font-size: 1rem;">{{ post.title }}</h5>
-                <p class="card-text" style="color: var(--text-primary); font-size: 0.88rem;">{{ post.content }}</p>
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <span style="color: var(--text-muted); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;">
-                        {% if post.is_anonymous %}
-                        <span style="color: var(--purple);">⬡ {{ post.owner_name }}</span>
-                        {% else %}
-                        {{ post.owner_name }}
-                        {% endif %}
-                    </span>
-                    <a href="{{ url_for('posts.view_post', post_id=post.id) }}" class="btn btn-outline-primary btn-sm">Read More</a>
+
+                {# Title #}
+                <h5 class="post-card-title">{{ post.title }}</h5>
+
+                {# Excerpt #}
+                <p class="post-card-excerpt flex-grow-1">{{ post.content }}</p>
+
+                {# Footer #}
+                <div class="post-card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if post.is_anonymous %}
+                            <span class="post-author-chip anon">⬡ {{ post.owner_name }}</span>
+                            {% else %}
+                            <span class="post-author-chip">◉ {{ post.owner_name }}</span>
+                            {% endif %}
+                            {% if post.has_documents %}
+                            <span class="post-doc-chip" title="Has attachments">📎</span>
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('posts.view_post', post_id=post.id) }}" class="post-read-btn">READ →</a>
+                    </div>
+                    <div class="post-date-line">{{ post.created_at }}</div>
                 </div>
-                {% if post.has_documents %}
-                <div class="mt-2"><span class="data-chip" style="font-size: 0.7rem;">📎 Documents</span></div>
-                {% endif %}
-                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem; font-family: 'JetBrains Mono', monospace;">{{ post.created_at }}</div>
+
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
+
 {% else %}
 <div class="text-center float-in float-in-delay-2" style="margin-top: 10vh;">
     <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;">⬡</div>
     <h5 style="font-family: 'Orbitron', sans-serif; letter-spacing: 2px; color: var(--text-muted);">NO REPORTS FOUND</h5>
-    <p style="color: var(--text-muted);">Be the first to submit a whistleblower report</p>
+    <p style="color: var(--text-muted);">
+        {% if category_filter or urgency_filter %}No reports match the current filters.
+        {% else %}Be the first to submit a whistleblower report.{% endif %}
+    </p>
+    {% if category_filter or urgency_filter %}
+    <a href="{{ url_for('feed.public_feed') }}" class="btn btn-outline-secondary me-2">Clear Filters</a>
+    {% endif %}
     <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary">+ SUBMIT REPORT</a>
 </div>
 {% endif %}
+
 {% endblock %}

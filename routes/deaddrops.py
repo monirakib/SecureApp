@@ -3,13 +3,18 @@ Dead drop routes - Self-destructing encrypted messages.
 Anyone can create or access a dead drop. Messages are destroyed after reading.
 """
 
+import os
+import io
+import base64
 import string
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g, abort
 
+import config
 import database as db
 from key_management import key_manager
 from crypto.sha256 import sha256_hex
 from crypto.utils import secure_random_bytes
+from crypto.rsa import rsa_decrypt_bytes
 from codenames import generate_codename
 
 deaddrops_bp = Blueprint('deaddrops', __name__)
@@ -66,6 +71,18 @@ def create_dead_drop():
 
         db.create_dead_drop(access_code_hash, title_enc, content_enc, codename, data_hmac, expires_at)
 
+        # Get the new drop ID to attach the file
+        conn = db.get_db()
+        new_drop_id = conn.execute(
+            "SELECT id FROM dead_drops WHERE access_code_hash = ?", (access_code_hash,)
+        ).fetchone()[0]
+        conn.close()
+
+        # Handle optional file attachment (no login required — uploaded_by will be None or current user)
+        from routes.posts import _handle_file_upload
+        uploader = g.user['id'] if g.user else None
+        _handle_file_upload(dead_drop_id=new_drop_id, uploaded_by=uploader)
+
         db.create_audit_log(
             g.user['id'] if g.user else None,
             'dead_drop_created',
@@ -111,6 +128,33 @@ def access_dead_drop():
     # Mark as read (destroyed)
     db.mark_dead_drop_read(drop['id'])
 
+    # Decrypt and collect attached files, then permanently delete them from disk+DB
+    attached_files = []
+    raw_docs = db.get_documents_by_dead_drop(drop['id'])
+    for doc in raw_docs:
+        try:
+            file_path = os.path.join(config.UPLOAD_DIR, doc['stored_filename'])
+            with open(file_path, 'rb') as f:
+                encrypted_data = f.read()
+            decrypted_data = rsa_decrypt_bytes(encrypted_data.decode('utf-8'), key_manager.rsa_private_key)
+            try:
+                fname = key_manager.decrypt_user_data(doc['original_filename_enc'])
+            except Exception:
+                fname = 'attachment'
+            attached_files.append({
+                'filename': fname,
+                'data_b64': base64.b64encode(decrypted_data).decode('utf-8'),
+                'size': doc['file_size']
+            })
+            # Permanently delete the file and DB record
+            try:
+                os.remove(file_path)
+            except OSError:
+                pass
+            db.delete_document(doc['id'])
+        except Exception:
+            pass  # If decryption fails, skip the file (already marked read)
+
     db.create_audit_log(
         g.user['id'] if g.user else None,
         'dead_drop_accessed',
@@ -125,4 +169,4 @@ def access_dead_drop():
         'created_at': drop['created_at']
     }
 
-    return render_template('view_deaddrop.html', drop=decrypted)
+    return render_template('view_deaddrop.html', drop=decrypted, attached_files=attached_files)

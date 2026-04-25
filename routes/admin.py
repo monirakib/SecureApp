@@ -212,6 +212,24 @@ def rotate_rsa_keys():
     return redirect(url_for('admin.key_management_page'))
 
 
+@admin_bp.route('/keys/rotate-hmac', methods=['POST'])
+@admin_required
+def rotate_hmac_keys():
+    """Rotate HMAC keys. Note: existing HMACs will no longer verify until data is re-signed."""
+    csrf = request.form.get('csrf_token', '')
+    if csrf != g.csrf_token:
+        abort(403)
+
+    try:
+        key_manager.rotate_hmac_keys()
+        db.log_key_rotation('HMAC', g.user['id'])
+        flash('HMAC keys rotated. New HMAC will be applied to data on next write.', 'success')
+    except Exception as e:
+        flash(f'HMAC key rotation failed: {str(e)}', 'danger')
+
+    return redirect(url_for('admin.key_management_page'))
+
+
 @admin_bp.route('/audit')
 @admin_required
 def audit_log():

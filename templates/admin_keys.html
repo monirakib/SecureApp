@@ -8,15 +8,32 @@
         <div class="card neon-card mb-4">
             <div class="card-header">SYSTEM RSA KEYS</div>
             <div class="card-body">
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">RSA keys are used to encrypt user profile data and ECC private keys.</p>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">RSA keys encrypt user profile data and ECC private keys.</p>
                 <p style="font-size: 0.82rem; color: var(--text-muted);">
-                    Key rotation will generate new RSA keys and re-encrypt all {{ user_count }} user records.
+                    Rotation will generate new RSA keys and re-encrypt all {{ user_count }} user records.
                 </p>
                 <form method="POST" action="{{ url_for('admin.rotate_rsa_keys') }}"
                       onsubmit="return confirm('This will re-encrypt ALL user data. Proceed?')">
                     <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
                     <button type="submit" class="btn btn-warning">
                         ⟳ ROTATE RSA KEYS
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">HMAC KEYS</div>
+            <div class="card-body">
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">HMAC keys are used for data integrity verification on posts, messages, and user records.</p>
+                <p style="font-size: 0.82rem; color: var(--text-muted);">
+                    After rotation, existing HMAC signatures will not match until data is re-written. New data will use the new keys automatically.
+                </p>
+                <form method="POST" action="{{ url_for('admin.rotate_hmac_keys') }}"
+                      onsubmit="return confirm('HMAC rotation will invalidate existing integrity checks. Proceed?')">
+                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+                    <button type="submit" class="btn btn-outline-warning">
+                        ⟳ ROTATE HMAC KEYS
                     </button>
                 </form>
             </div>
@@ -33,6 +50,10 @@
                     <tr>
                         <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">POSTS</td>
                         <td><span class="data-chip">ECC ElGamal (secp256k1)</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">MESSAGES</td>
+                        <td><span class="data-chip">ECC ElGamal (E2E)</span></td>
                     </tr>
                     <tr>
                         <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">PASSWORDS</td>
