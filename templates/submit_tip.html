@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Submit Anonymous Tip - SecureApp{% endblock %}
+{% block content %}
+<div class="row justify-content-center" style="margin-top: 2vh;">
+    <div class="col-md-8 col-lg-6">
+        <div class="text-center mb-4 float-in">
+            <h2 class="section-title" style="display: inline-block;">ANONYMOUS TIP</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; letter-spacing: 1px;">NO LOGIN REQUIRED · FULLY ENCRYPTED · UNTRACEABLE</p>
+        </div>
+        <div class="card neon-card float-in float-in-delay-1">
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('tips.submit_tip') }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="corruption">Corruption</option>
+                                <option value="fraud">Fraud</option>
+                                <option value="safety">Safety Violation</option>
+                                <option value="harassment">Harassment</option>
+                                <option value="environmental">Environmental</option>
+                                <option value="corporate">Corporate Misconduct</option>
+                                <option value="government">Government</option>
+                                <option value="other" selected>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="urgency" class="form-label">Urgency Level</label>
+                            <select class="form-select" id="urgency" name="urgency">
+                                <option value="critical">🔴 Critical</option>
+                                <option value="high">🟠 High</option>
+                                <option value="medium" selected>🟡 Medium</option>
+                                <option value="low">🟢 Low</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title"
+                               required maxlength="200" placeholder="Brief description of the issue...">
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Details</label>
+                        <textarea class="form-control" id="content" name="content"
+                                  rows="8" required placeholder="Provide as much detail as possible. Include names, dates, locations, and any evidence you have..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">⬡ SUBMIT ANONYMOUS TIP</button>
+                </form>
+            </div>
+        </div>
+        <div class="card mt-3 float-in float-in-delay-2">
+            <div class="card-body" style="font-size: 0.82rem;">
+                <div class="encrypt-badge mb-2"><span class="dot"></span> ENCRYPTED WITH RSA-1024</div>
+                <span style="color: var(--text-muted);">Your tip is encrypted at rest. No IP address or identifying information is stored with the submission. A random codename will be assigned to protect your identity.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

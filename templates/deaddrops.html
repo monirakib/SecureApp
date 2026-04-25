@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Dead Drops - SecureApp{% endblock %}
+{% block content %}
+<div class="row justify-content-center" style="margin-top: 2vh;">
+    <div class="col-lg-10">
+        <div class="text-center mb-4 float-in">
+            <h2 class="section-title">DEAD DROPS</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; letter-spacing: 1px;">SELF-DESTRUCTING ENCRYPTED MESSAGES · ONE-TIME READ · AUTO-EXPIRE</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 float-in float-in-delay-1">
+                <div class="card neon-card h-100">
+                    <div class="card-header">CREATE DEAD DROP</div>
+                    <div class="card-body p-4">
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Create an encrypted message that self-destructs after being read once. You'll receive a unique access code to share.
+                        </p>
+                        <a href="{{ url_for('deaddrops.create_dead_drop') }}" class="btn btn-primary w-100">
+                            + CREATE DEAD DROP
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 float-in float-in-delay-2">
+                <div class="card h-100">
+                    <div class="card-header">ACCESS DEAD DROP</div>
+                    <div class="card-body p-4">
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Enter an access code to retrieve a dead drop message. The message will be permanently destroyed after viewing.
+                        </p>
+                        <form method="POST" action="{{ url_for('deaddrops.access_dead_drop') }}">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="access_code"
+                                       placeholder="XXX-XXX-XXX-XXX" required
+                                       style="font-family: 'JetBrains Mono', monospace; letter-spacing: 2px; text-transform: uppercase;">
+                                <button type="submit" class="btn btn-primary">ACCESS</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4 float-in float-in-delay-3">
+            <div class="card-body" style="font-size: 0.82rem;">
+                <div class="encrypt-badge mb-2"><span class="dot"></span> ZERO-KNOWLEDGE PROTOCOL</div>
+                <span style="color: var(--text-muted);">Dead drops are RSA encrypted at rest. Messages are permanently destroyed after the first read. Access codes are SHA-256 hashed — we never store the plaintext code. Messages auto-expire after 24 hours.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

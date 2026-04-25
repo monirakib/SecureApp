@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Anonymous Tips - SecureApp{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 float-in">
+    <h2 class="section-title mb-0">ANONYMOUS TIPS</h2>
+</div>
+
+<div class="card mb-4 float-in float-in-delay-1">
+    <div class="card-body py-2">
+        <form method="GET" class="d-flex gap-3 align-items-center flex-wrap">
+            <span style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.65rem; letter-spacing: 2px;">STATUS:</span>
+            <select name="status" class="form-select form-select-sm" style="width: auto;">
+                <option value="">All</option>
+                {% for s in ['new', 'reviewing', 'resolved', 'dismissed'] %}
+                <option value="{{ s }}" {{ 'selected' if status_filter == s }}>{{ s|capitalize }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-outline-primary btn-sm">Filter</button>
+            {% if status_filter %}
+            <a href="{{ url_for('tips.manage_tips') }}" class="btn btn-outline-secondary btn-sm">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+{% if tips %}
+<div class="card float-in float-in-delay-2">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Codename</th>
+                        <th>Category</th>
+                        <th>Urgency</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tip in tips %}
+                    <tr>
+                        <td><span class="data-chip">{{ tip.id }}</span></td>
+                        <td style="font-weight: 600; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ tip.title }}</td>
+                        <td style="color: var(--purple); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">{{ tip.codename }}</td>
+                        <td><span class="category-badge category-{{ tip.category }}" style="font-size: 0.65rem;">{{ tip.category|upper }}</span></td>
+                        <td><span class="urgency-badge urgency-{{ tip.urgency }}" style="font-size: 0.65rem;">{{ tip.urgency|upper }}</span></td>
+                        <td><span class="status-badge status-{{ tip.status }}">{{ tip.status|upper }}</span></td>
+                        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-muted);">{{ tip.created_at }}</td>
+                        <td>
+                            <a href="{{ url_for('tips.view_tip', tip_id=tip.id) }}" class="btn btn-outline-primary btn-sm">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<p style="color: var(--text-muted);" class="float-in float-in-delay-2">No anonymous tips found.</p>
+{% endif %}
+{% endblock %}

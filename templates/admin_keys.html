@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Key Management - SecureApp{% endblock %}
+{% block content %}
+<h2 class="section-title float-in">KEY MANAGEMENT</h2>
+
+<div class="row">
+    <div class="col-md-6 float-in float-in-delay-1">
+        <div class="card neon-card mb-4">
+            <div class="card-header">SYSTEM RSA KEYS</div>
+            <div class="card-body">
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">RSA keys are used to encrypt user profile data and ECC private keys.</p>
+                <p style="font-size: 0.82rem; color: var(--text-muted);">
+                    Key rotation will generate new RSA keys and re-encrypt all {{ user_count }} user records.
+                </p>
+                <form method="POST" action="{{ url_for('admin.rotate_rsa_keys') }}"
+                      onsubmit="return confirm('This will re-encrypt ALL user data. Proceed?')">
+                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+                    <button type="submit" class="btn btn-warning">
+                        ⟳ ROTATE RSA KEYS
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">ENCRYPTION OVERVIEW</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">USER DATA</td>
+                        <td><span class="data-chip">RSA-1024</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">POSTS</td>
+                        <td><span class="data-chip">ECC ElGamal (secp256k1)</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">PASSWORDS</td>
+                        <td><span class="data-chip">SHA-256 + salt</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">INTEGRITY</td>
+                        <td><span class="data-chip">HMAC-SHA256</span></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">SESSIONS</td>
+                        <td><span class="data-chip">HMAC-signed tokens</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 float-in float-in-delay-2">
+        <div class="card">
+            <div class="card-header">KEY ROTATION HISTORY</div>
+            <div class="card-body">
+                {% if rotation_log %}
+                <table class="table table-sm">
+                    <thead><tr><th>Type</th><th>Date</th><th>By</th></tr></thead>
+                    <tbody>
+                    {% for log in rotation_log %}
+                    <tr>
+                        <td><span class="data-chip">{{ log.key_type }}</span></td>
+                        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-muted);">{{ log.rotated_at }}</td>
+                        <td><span class="data-chip">{{ log.rotated_by }}</span></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p style="color: var(--text-muted);" class="mb-0">No key rotations performed yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

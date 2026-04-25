@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Login - SecureApp{% endblock %}
+{% block content %}
+<div class="row justify-content-center" style="margin-top: 6vh;">
+    <div class="col-md-5 col-lg-4">
+        <div class="text-center mb-4 float-in">
+            <h2 class="section-title" style="display: inline-block;">SYSTEM LOGIN</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; letter-spacing: 1px;">AUTHENTICATE TO CONTINUE</p>
+        </div>
+        <div class="card neon-card scan-line float-in float-in-delay-1">
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username"
+                               required autocomplete="username" placeholder="Enter username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password"
+                               required autocomplete="current-password" placeholder="Enter password">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">⏎ AUTHENTICATE</button>
+                </form>
+                <div class="text-center mt-3" style="border-top: 1px solid var(--glass-border); padding-top: 1rem;">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">No account?</span>
+                    <a href="{{ url_for('auth.register') }}" style="font-weight: 600; letter-spacing: 1px;">Register here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

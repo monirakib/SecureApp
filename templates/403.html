@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}403 Forbidden - SecureApp{% endblock %}
+{% block content %}
+<div class="text-center" style="margin-top: 12vh;">
+    <div class="float-in">
+        <h1 class="hero-title" style="font-size: 8rem; line-height: 1;">403</h1>
+    </div>
+    <div class="float-in float-in-delay-1">
+        <h3 style="font-family: 'Orbitron', sans-serif; font-size: 1rem; letter-spacing: 4px; color: var(--pink);">ACCESS DENIED</h3>
+    </div>
+    <div class="float-in float-in-delay-2">
+        <p style="color: var(--text-muted); max-width: 400px; margin: 1rem auto;">You don't have the required clearance level to access this resource.</p>
+    </div>
+    <div class="float-in float-in-delay-3">
+        <a href="{{ url_for('posts.my_posts') if g.user else url_for('auth.login') }}" class="btn btn-primary">← GO BACK</a>
+    </div>
+</div>
+{% endblock %}

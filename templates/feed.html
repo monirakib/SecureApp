@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Report Feed - SecureApp{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 float-in">
+    <h2 class="section-title mb-0">REPORT FEED</h2>
+    <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary">+ SUBMIT REPORT</a>
+</div>
+
+<div class="card mb-4 float-in float-in-delay-1">
+    <div class="card-body py-2">
+        <form method="GET" class="d-flex gap-3 align-items-center flex-wrap">
+            <span style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.65rem; letter-spacing: 2px;">FILTER:</span>
+            <select name="category" class="form-select form-select-sm" style="width: auto;">
+                <option value="">All Categories</option>
+                {% for cat in ['corruption', 'fraud', 'safety', 'harassment', 'environmental', 'corporate', 'government', 'other'] %}
+                <option value="{{ cat }}" {{ 'selected' if category_filter == cat }}>{{ cat|capitalize }}</option>
+                {% endfor %}
+            </select>
+            <select name="urgency" class="form-select form-select-sm" style="width: auto;">
+                <option value="">All Urgency</option>
+                {% for urg in ['critical', 'high', 'medium', 'low'] %}
+                <option value="{{ urg }}" {{ 'selected' if urgency_filter == urg }}>{{ urg|capitalize }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-outline-primary btn-sm">Apply</button>
+            {% if category_filter or urgency_filter %}
+            <a href="{{ url_for('feed.public_feed') }}" class="btn btn-outline-secondary btn-sm">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+{% if posts %}
+<div class="row">
+    {% for post in posts %}
+    <div class="col-md-6 col-lg-4 mb-3 float-in float-in-delay-{{ loop.index0 % 6 + 1 }}">
+        <div class="card post-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="category-badge category-{{ post.category }}">{{ post.category|upper }}</span>
+                    <span class="urgency-badge urgency-{{ post.urgency }}">{{ post.urgency|upper }}</span>
+                </div>
+                <h5 class="card-title mt-2" style="font-size: 1rem;">{{ post.title }}</h5>
+                <p class="card-text" style="color: var(--text-primary); font-size: 0.88rem;">{{ post.content }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span style="color: var(--text-muted); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;">
+                        {% if post.is_anonymous %}
+                        <span style="color: var(--purple);">⬡ {{ post.owner_name }}</span>
+                        {% else %}
+                        {{ post.owner_name }}
+                        {% endif %}
+                    </span>
+                    <a href="{{ url_for('posts.view_post', post_id=post.id) }}" class="btn btn-outline-primary btn-sm">Read More</a>
+                </div>
+                {% if post.has_documents %}
+                <div class="mt-2"><span class="data-chip" style="font-size: 0.7rem;">📎 Documents</span></div>
+                {% endif %}
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem; font-family: 'JetBrains Mono', monospace;">{{ post.created_at }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center float-in float-in-delay-2" style="margin-top: 10vh;">
+    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;">⬡</div>
+    <h5 style="font-family: 'Orbitron', sans-serif; letter-spacing: 2px; color: var(--text-muted);">NO REPORTS FOUND</h5>
+    <p style="color: var(--text-muted);">Be the first to submit a whistleblower report</p>
+    <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary">+ SUBMIT REPORT</a>
+</div>
+{% endif %}
+{% endblock %}

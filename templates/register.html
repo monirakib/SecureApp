@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Register - SecureApp{% endblock %}
+{% block content %}
+<div class="row justify-content-center" style="margin-top: 4vh;">
+    <div class="col-md-6 col-lg-5">
+        <div class="text-center mb-4 float-in">
+            <h2 class="section-title" style="display: inline-block;">CREATE ACCOUNT</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; letter-spacing: 1px;">INITIALIZE NEW IDENTITY</p>
+        </div>
+        <div class="card neon-card scan-line float-in float-in-delay-1">
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('auth.register') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username"
+                               required minlength="3" maxlength="50" autocomplete="username" placeholder="Choose a handle">
+                        <div class="form-text">3-50 characters</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email"
+                               required autocomplete="email" placeholder="your@email.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone (optional)</label>
+                        <input type="tel" class="form-control" id="phone" name="phone"
+                               autocomplete="tel" placeholder="+1 (555) 000-0000">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password"
+                               required minlength="6" autocomplete="new-password" placeholder="Min 6 characters">
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirm_password"
+                               name="confirm_password" required autocomplete="new-password" placeholder="Repeat password">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">⬡ INITIALIZE ACCOUNT</button>
+                </form>
+                <div class="text-center mt-3" style="border-top: 1px solid var(--glass-border); padding-top: 1rem;">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">Already registered?</span>
+                    <a href="{{ url_for('auth.login') }}" style="font-weight: 600; letter-spacing: 1px;">Login here</a>
+                </div>
+            </div>
+        </div>
+        <div class="card mt-3 float-in float-in-delay-2">
+            <div class="card-body" style="font-size: 0.82rem;">
+                <div class="encrypt-badge mb-2"><span class="dot"></span> AUTO-ENCRYPTION ENABLED</div>
+                <span style="color: var(--text-muted);">Your data will be encrypted with RSA-1024. An ECC key pair (secp256k1) will be generated for your posts. Passwords are hashed with SHA-256 + salt.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

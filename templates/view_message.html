@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}View Message - SecureApp{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb" class="float-in">
+            <ol class="breadcrumb" style="font-size: 0.85rem;">
+                <li class="breadcrumb-item"><a href="{{ url_for('messages.inbox') }}">Inbox</a></li>
+                <li class="breadcrumb-item active" style="color: var(--text-muted);">Message</li>
+            </ol>
+        </nav>
+        <div class="card post-card float-in float-in-delay-1">
+            <div class="card-body p-4">
+                <div class="encrypt-badge mb-3"><span class="dot"></span> DECRYPTED FROM RSA STORAGE</div>
+                <h2 style="font-size: 1.3rem; letter-spacing: 1px;">{{ message.subject }}</h2>
+                <div style="font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 1rem;">
+                    <span style="color: var(--cyan);">From:</span> {{ message.sender_name }}
+                    &middot;
+                    <span style="color: var(--cyan);">To:</span> {{ message.recipient_name }}
+                    &middot;
+                    {{ message.created_at }}
+                </div>
+                <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
+                <div class="post-content">{{ message.content | nl2br }}</div>
+            </div>
+        </div>
+        <div class="mt-3 float-in float-in-delay-2">
+            {% if message.sender_id and message.sender_id != g.user.id %}
+            <a href="{{ url_for('messages.compose') }}" class="btn btn-outline-primary">Reply</a>
+            {% endif %}
+            <a href="{{ url_for('messages.inbox') }}" class="btn btn-outline-secondary">← Inbox</a>
+            <form method="POST" action="{{ url_for('messages.delete_message', msg_id=message.id) }}"
+                  style="display:inline" onsubmit="return confirm('Delete this message?')">
+                <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

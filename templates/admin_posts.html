@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}All Reports - SecureApp{% endblock %}
+{% block content %}
+<h2 class="section-title float-in">ALL REPORTS</h2>
+
+{% if posts %}
+<div class="card float-in float-in-delay-1">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Urgency</th>
+                        <th>Author</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in posts %}
+                    <tr>
+                        <td><span class="data-chip">{{ post.id }}</span></td>
+                        <td style="font-weight: 600;">{{ post.title }}</td>
+                        <td>{% if post.get('category') %}<span class="category-badge category-{{ post.get('category','other') }}" style="font-size:0.65rem;">{{ post.get('category','other')|upper }}</span>{% endif %}</td>
+                        <td>{% if post.get('urgency') %}<span class="urgency-badge urgency-{{ post.get('urgency','medium') }}" style="font-size:0.65rem;">{{ post.get('urgency','medium')|upper }}</span>{% endif %}</td>
+                        <td>{% if post.get('is_anonymous') %}<span style="color:var(--purple);">{{ post.owner_name }}</span>{% else %}{{ post.owner_name }}{% endif %}</td>
+                        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-muted);">{{ post.created_at }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('posts.view_post', post_id=post.id) }}" class="btn btn-outline-primary btn-sm">View</a>
+                                <form method="POST" action="{{ url_for('admin.admin_delete_post', post_id=post.id) }}"
+                                      style="display:inline" onsubmit="return confirm('Delete this report?')">
+                                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<p style="color: var(--text-muted);" class="float-in float-in-delay-1">No reports in the system.</p>
+{% endif %}
+{% endblock %}

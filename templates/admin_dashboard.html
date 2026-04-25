@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - SecureApp{% endblock %}
+{% block content %}
+<h2 class="section-title float-in">ADMIN DASHBOARD</h2>
+
+<div class="row mb-4">
+    <div class="col-md-4 col-lg-2 float-in float-in-delay-1">
+        <div class="stat-card cyan">
+            <div class="stat-number count-up">{{ user_count }}</div>
+            <div class="stat-label">Users</div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2 float-in float-in-delay-2">
+        <div class="stat-card green">
+            <div class="stat-number count-up">{{ post_count }}</div>
+            <div class="stat-label">Reports</div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2 float-in float-in-delay-3">
+        <div class="stat-card purple">
+            <div class="stat-number count-up">{{ tip_count }}</div>
+            <div class="stat-label">Tips</div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2 float-in float-in-delay-4">
+        <div class="stat-card pink">
+            <div class="stat-number count-up">{{ new_tips }}</div>
+            <div class="stat-label">New Tips</div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2 float-in float-in-delay-5">
+        <div class="stat-card cyan">
+            <div class="stat-number count-up">{{ doc_count }}</div>
+            <div class="stat-label">Documents</div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2 float-in float-in-delay-6">
+        <div class="stat-card green">
+            <div class="stat-number count-up">{{ drop_count }}</div>
+            <div class="stat-label">Dead Drops</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 float-in float-in-delay-4">
+        <div class="card">
+            <div class="card-header">QUICK ACCESS</div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('admin.manage_users') }}" class="list-group-item list-group-item-action">◎ Manage Users</a>
+                <a href="{{ url_for('admin.manage_posts') }}" class="list-group-item list-group-item-action">◈ All Reports</a>
+                <a href="{{ url_for('tips.manage_tips') }}" class="list-group-item list-group-item-action">
+                    ⚑ Anonymous Tips
+                    {% if new_tips %}<span class="badge bg-danger float-end">{{ new_tips }} new</span>{% endif %}
+                </a>
+                <a href="{{ url_for('admin.key_management_page') }}" class="list-group-item list-group-item-action">⚿ Key Management</a>
+                <a href="{{ url_for('admin.audit_log') }}" class="list-group-item list-group-item-action">⏱ Audit Log</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 float-in float-in-delay-5">
+        <div class="card">
+            <div class="card-header">RECENT KEY ROTATIONS</div>
+            <div class="card-body">
+                {% if rotation_log %}
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Type</th><th>Date</th></tr></thead>
+                    <tbody>
+                    {% for log in rotation_log[:5] %}
+                    <tr>
+                        <td><span class="data-chip">{{ log.key_type }}</span></td>
+                        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-muted);">{{ log.rotated_at }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p style="color: var(--text-muted);" class="mb-0">No key rotations performed yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

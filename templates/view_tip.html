@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}View Tip - SecureApp{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb" class="float-in">
+            <ol class="breadcrumb" style="font-size: 0.85rem;">
+                <li class="breadcrumb-item"><a href="{{ url_for('tips.manage_tips') }}">Tips</a></li>
+                <li class="breadcrumb-item active" style="color: var(--text-muted);">Tip #{{ tip.id }}</li>
+            </ol>
+        </nav>
+        <div class="card post-card float-in float-in-delay-1">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="category-badge category-{{ tip.category }}">{{ tip.category|upper }}</span>
+                        <span class="urgency-badge urgency-{{ tip.urgency }}">{{ tip.urgency|upper }}</span>
+                    </div>
+                    <span class="status-badge status-{{ tip.status }}">{{ tip.status|upper }}</span>
+                </div>
+                <div class="encrypt-badge mb-3"><span class="dot"></span> DECRYPTED FROM RSA STORAGE</div>
+                <h2 style="font-size: 1.3rem; letter-spacing: 1px;">{{ tip.title }}</h2>
+                <p style="color: var(--text-muted); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace;">
+                    <span style="color: var(--purple);">⬡ {{ tip.codename }}</span> &middot; {{ tip.created_at }}
+                </p>
+                <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
+                <div class="post-content">{{ tip.content | nl2br }}</div>
+
+                {% if tip.documents %}
+                <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
+                <h6 style="font-family: 'Orbitron', sans-serif; font-size: 0.7rem; letter-spacing: 2px; color: var(--text-muted);">ATTACHED DOCUMENTS</h6>
+                {% for doc in tip.documents %}
+                <a href="{{ url_for('posts.download_document', doc_id=doc.id) }}" class="btn btn-outline-primary btn-sm me-2 mb-1">
+                    📎 {{ doc.filename }} ({{ (doc.file_size / 1024)|int }}KB)
+                </a>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-3 float-in float-in-delay-2">
+            <div class="card-header">ADMIN ACTIONS</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('tips.update_tip_status', tip_id=tip.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                {% for s in ['new', 'reviewing', 'resolved', 'dismissed'] %}
+                                <option value="{{ s }}" {{ 'selected' if tip.status == s }}>{{ s|capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Admin Notes</label>
+                            <textarea name="admin_notes" class="form-control" rows="2">{{ tip.admin_notes }}</textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Update Status</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-3 float-in float-in-delay-3">
+            <a href="{{ url_for('tips.manage_tips') }}" class="btn btn-outline-secondary">← Back to Tips</a>
+            <form method="POST" action="{{ url_for('tips.delete_tip', tip_id=tip.id) }}"
+                  style="display:inline" onsubmit="return confirm('Delete this tip permanently?')">
+                <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm">Delete Tip</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

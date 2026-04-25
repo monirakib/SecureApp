@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Inbox - SecureApp{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 float-in">
+    <h2 class="section-title mb-0">SECURE INBOX {% if unread_count %}<span class="badge bg-danger" style="font-size: 0.7rem; vertical-align: middle;">{{ unread_count }}</span>{% endif %}</h2>
+    <div>
+        <a href="{{ url_for('messages.compose') }}" class="btn btn-primary">+ COMPOSE</a>
+        <a href="{{ url_for('messages.sent') }}" class="btn btn-outline-secondary ms-2">Sent</a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="card float-in float-in-delay-1">
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for msg in messages %}
+            <a href="{{ url_for('messages.view_message', msg_id=msg.id) }}"
+               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+               style="{% if not msg.is_read %}border-left: 3px solid var(--cyan);{% endif %}">
+                <div>
+                    {% if not msg.is_read %}
+                    <span class="badge bg-info me-2" style="font-size: 0.6rem;">NEW</span>
+                    {% endif %}
+                    <strong style="{% if not msg.is_read %}color: var(--cyan);{% endif %}">{{ msg.subject }}</strong>
+                    <br>
+                    <small style="color: var(--text-muted);">From: {{ msg.sender_name }}</small>
+                </div>
+                <small style="color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;">{{ msg.created_at }}</small>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="text-center float-in float-in-delay-1" style="margin-top: 10vh;">
+    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;">✉</div>
+    <h5 style="font-family: 'Orbitron', sans-serif; letter-spacing: 2px; color: var(--text-muted);">NO MESSAGES</h5>
+    <p style="color: var(--text-muted);">Your inbox is empty</p>
+</div>
+{% endif %}
+{% endblock %}

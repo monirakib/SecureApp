@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}SecureApp - Anonymous Whistleblower & Secure Document Exchange{% endblock %}
+{% block content %}
+<div class="row justify-content-center" style="margin-top: 6vh;">
+    <div class="col-lg-10 text-center">
+
+        <div class="float-in">
+            <h1 class="hero-title glitch mb-3" data-text="SECUREAPP">SECUREAPP</h1>
+        </div>
+
+        <div class="float-in float-in-delay-1">
+            <p class="hero-subtitle mb-4">
+                Anonymous Whistleblower &amp; Secure Document Exchange Platform.
+                End-to-end encrypted with RSA &amp; ECC cryptography,
+                self-destructing dead drops, and zero plaintext storage.
+                Every algorithm built from scratch.
+            </p>
+        </div>
+
+        <div class="float-in float-in-delay-2 mb-5">
+            <span class="encrypt-badge">
+                <span class="dot"></span> ALL DATA ENCRYPTED AT REST
+            </span>
+        </div>
+
+        <div class="row justify-content-center mt-4 mb-4">
+            <div class="col-md-3 float-in float-in-delay-2">
+                <div class="card neon-card mb-3">
+                    <div class="card-body text-center py-4">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; filter: drop-shadow(0 0 15px rgba(0,240,255,0.4));">⚑</div>
+                        <h5 style="font-size: 0.8rem; letter-spacing: 2px; color: var(--cyan);">ANONYMOUS TIPS</h5>
+                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.85rem;">Submit tips without login. No trace, no identity.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 float-in float-in-delay-3">
+                <div class="card neon-card mb-3">
+                    <div class="card-body text-center py-4">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; filter: drop-shadow(0 0 15px rgba(180,0,255,0.4));">☠</div>
+                        <h5 style="font-size: 0.8rem; letter-spacing: 2px; color: var(--purple);">DEAD DROPS</h5>
+                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.85rem;">Self-destructing messages. One-time read, then gone.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 float-in float-in-delay-4">
+                <div class="card neon-card mb-3">
+                    <div class="card-body text-center py-4">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; filter: drop-shadow(0 0 15px rgba(0,255,136,0.4));">📎</div>
+                        <h5 style="font-size: 0.8rem; letter-spacing: 2px; color: var(--green);">SECURE DOCS</h5>
+                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.85rem;">Upload encrypted documents with hybrid AES+RSA.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 float-in float-in-delay-5">
+                <div class="card neon-card mb-3">
+                    <div class="card-body text-center py-4">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; filter: drop-shadow(0 0 15px rgba(255,0,102,0.4));">✉</div>
+                        <h5 style="font-size: 0.8rem; letter-spacing: 2px; color: var(--pink);">SECURE MESSAGING</h5>
+                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.85rem;">Encrypted communication with anonymous option.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-3 float-in float-in-delay-3">
+                <div class="card neon-card mb-3">
+                    <div class="card-body text-center py-3">
+                        <div style="font-size: 2rem; margin-bottom: 0.3rem;">⚿</div>
+                        <h5 style="font-size: 0.7rem; letter-spacing: 2px; color: var(--cyan);">RSA + ECC</h5>
+                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.8rem;">Dual asymmetric encryption from scratch</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 float-in float-in-delay-4">
+                <div class="card neon-card mb-3">
+                    <div class="card-body text-center py-3">
+                        <div style="font-size: 2rem; margin-bottom: 0.3rem;">⬡</div>
+                        <h5 style="font-size: 0.7rem; letter-spacing: 2px; color: var(--purple);">2FA EMAIL</h5>
+                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.8rem;">Two-factor verification via email</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 float-in float-in-delay-5">
+                <div class="card neon-card mb-3">
+                    <div class="card-body text-center py-3">
+                        <div style="font-size: 2rem; margin-bottom: 0.3rem;">◈</div>
+                        <h5 style="font-size: 0.7rem; letter-spacing: 2px; color: var(--green);">HMAC INTEGRITY</h5>
+                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.8rem;">Tamper detection on all stored data</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="float-in float-in-delay-5 mb-4">
+            <a href="{{ url_for('tips.submit_tip') }}" class="btn btn-primary btn-lg me-2">
+                ⚑ SUBMIT ANONYMOUS TIP
+            </a>
+            <a href="{{ url_for('deaddrops.dead_drops_page') }}" class="btn btn-outline-primary btn-lg me-2">
+                ☠ DEAD DROPS
+            </a>
+        </div>
+
+        <div class="float-in float-in-delay-6 mb-3">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary me-2">
+                ⏎ LOGIN
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary">
+                + REGISTER
+            </a>
+        </div>
+
+        <div class="float-in float-in-delay-6 mt-4">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); letter-spacing: 1px; overflow: hidden; white-space: nowrap;">
+                <span class="decrypt-text">SHA-256 ◈ HMAC-SHA256 ◈ RSA-1024 ◈ ECC-SECP256K1 ◈ ELGAMAL ◈ XOR-CTR ◈ MILLER-RABIN ◈ KOBLITZ ◈ DEAD-DROPS ◈ ZERO-KNOWLEDGE</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
