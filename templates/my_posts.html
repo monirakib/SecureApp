@@ -27,6 +27,8 @@
                 {% if post.get('category') %}
                 <span class="category-badge category-{{ post.get('category', 'other') }}" style="font-size: 0.6rem;">{{ post.get('category', 'other')|upper }}</span>
                 {% endif %}
+                {% set st = post.get('status', 'new') %}
+                <span class="status-badge status-{{ st }}" style="font-size:0.6rem;">{{ st|upper }}</span>
                 {% endif %}
                 <h5 class="card-title mt-2">{{ post.title }}</h5>
                 <p style="color: var(--text-muted); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace;">

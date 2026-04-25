@@ -38,9 +38,10 @@
                                required maxlength="200" placeholder="Report title...">
                     </div>
                     <div class="mb-3">
-                        <label for="content" class="form-label">Content</label>
+                        <label for="content" class="form-label">Content <span id="content-count" style="color:var(--text-muted);font-size:0.78rem;float:right;">0 chars</span></label>
                         <textarea class="form-control" id="content" name="content"
-                                  rows="8" required placeholder="Describe the issue in detail. Include names, dates, evidence..."></textarea>
+                                  rows="8" required placeholder="Describe the issue in detail. Include names, dates, evidence..."
+                                  oninput="document.getElementById('content-count').textContent=this.value.length+' chars'"></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="document" class="form-label">Attach Document (optional, max 2MB)</label>

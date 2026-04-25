@@ -189,3 +189,36 @@ def delete_tip(tip_id):
 
     flash('Tip deleted.', 'info')
     return redirect(url_for('tips.manage_tips'))
+
+
+@tips_bp.route('/admin/tips/bulk-action', methods=['POST'])
+@admin_required
+def bulk_action_tips():
+    """Admin: bulk update tip status."""
+    csrf = request.form.get('csrf_token', '')
+    if csrf != g.csrf_token:
+        abort(403)
+
+    action = request.form.get('bulk_action', '')
+    tip_ids = request.form.getlist('tip_ids')
+
+    if not tip_ids:
+        flash('No tips selected.', 'warning')
+        return redirect(url_for('tips.manage_tips'))
+
+    valid_statuses = {'resolve': 'resolved', 'dismiss': 'dismissed', 'review': 'reviewing'}
+    if action not in valid_statuses:
+        flash('Invalid action.', 'danger')
+        return redirect(url_for('tips.manage_tips'))
+
+    try:
+        tip_ids_int = [int(t) for t in tip_ids]
+    except ValueError:
+        abort(400)
+
+    new_status = valid_statuses[action]
+    db.bulk_update_tips_status(tip_ids_int, new_status)
+    db.create_audit_log(g.user['id'], 'tips_bulk_updated',
+                        f'{len(tip_ids_int)} tips -> {new_status}', request.remote_addr)
+    flash(f'{len(tip_ids_int)} tip(s) marked as {new_status}.', 'success')
+    return redirect(url_for('tips.manage_tips'))

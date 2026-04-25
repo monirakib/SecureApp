@@ -27,6 +27,7 @@ def dashboard():
     doc_count = db.count_documents()
     drop_count = db.count_dead_drops()
     rotation_log = db.get_key_rotation_log()
+    failed_logins = db.get_recent_failed_logins(10)
 
     return render_template('admin_dashboard.html',
                            user_count=user_count,
@@ -35,7 +36,8 @@ def dashboard():
                            new_tips=new_tips,
                            doc_count=doc_count,
                            drop_count=drop_count,
-                           rotation_log=rotation_log)
+                           rotation_log=rotation_log,
+                           failed_logins=failed_logins)
 
 
 @admin_bp.route('/users')
@@ -134,6 +136,10 @@ def manage_posts():
             'id': post['id'],
             'title': title,
             'owner_name': owner_name,
+            'category': post.get('category', 'other'),
+            'urgency': post.get('urgency', 'medium'),
+            'status': post.get('status', 'new'),
+            'is_anonymous': post.get('is_anonymous', 0),
             'created_at': post['created_at']
         })
 
@@ -155,6 +161,29 @@ def admin_delete_post(post_id):
     db.delete_post(post_id)
     flash('Post deleted.', 'info')
     return redirect(url_for('admin.manage_posts'))
+
+
+@admin_bp.route('/posts/<int:post_id>/status', methods=['POST'])
+@admin_required
+def update_post_status(post_id):
+    """Admin: change post status."""
+    csrf = request.form.get('csrf_token', '')
+    if csrf != g.csrf_token:
+        abort(403)
+
+    status = request.form.get('status', 'new')
+    if status not in ('new', 'reviewing', 'resolved'):
+        abort(400)
+
+    post = db.get_post_by_id(post_id)
+    if not post:
+        abort(404)
+
+    db.update_post_status(post_id, status)
+    db.create_audit_log(g.user['id'], 'post_status_changed',
+                        f'Post #{post_id} status -> {status}', request.remote_addr)
+    flash(f'Post status updated to {status}.', 'success')
+    return redirect(request.referrer or url_for('posts.view_post', post_id=post_id))
 
 
 @admin_bp.route('/keys')

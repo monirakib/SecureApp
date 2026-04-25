@@ -37,6 +37,10 @@
                         <th>Joined</th>
                         <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-muted);">{{ profile.created_at }}</td>
                     </tr>
+                    <tr>
+                        <th>ECC Key Fingerprint</th>
+                        <td><span class="data-chip" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--cyan);letter-spacing:1px;" title="SHA-256 of your ECC secp256k1 public key (first 16 chars)">{{ profile.key_fingerprint }}</span></td>
+                    </tr>
                 </table>
             </div>
         </div>

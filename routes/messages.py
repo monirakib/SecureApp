@@ -110,6 +110,7 @@ def compose():
         subject = request.form.get('subject', '').strip()
         content = request.form.get('content', '').strip()
         anonymous = request.form.get('anonymous', '') == '1'
+        expiry_hours = request.form.get('expiry_hours', '')
 
         if not recipient_id or not subject or not content:
             flash('Recipient, subject, and content are required.', 'danger')
@@ -153,13 +154,20 @@ def compose():
 
         data_hmac = key_manager.compute_data_hmac(subject_enc, content_enc, g.user['id'])
 
+        # Compute expiry timestamp if set
+        expires_at = None
+        if expiry_hours and expiry_hours.isdigit() and int(expiry_hours) > 0:
+            from datetime import datetime, timedelta
+            expires_at = (datetime.utcnow() + timedelta(hours=int(expiry_hours))).isoformat()
+
         new_msg_id = db.create_message(
             sender_id=g.user['id'],
             recipient_id=recipient_id,
             subject_enc=subject_enc,
             content_enc=content_enc,
             sender_codename=sender_codename,
-            data_hmac=data_hmac
+            data_hmac=data_hmac,
+            expires_at=expires_at
         )
 
         # Handle optional file attachment
@@ -255,7 +263,8 @@ def view_message(msg_id):
         'sender_id': msg['sender_id'],
         'recipient_id': msg['recipient_id'],
         'is_read': msg['is_read'],
-        'created_at': msg['created_at']
+        'created_at': msg['created_at'],
+        'expires_at': msg.get('expires_at')
     }
 
     # Fetch attached documents

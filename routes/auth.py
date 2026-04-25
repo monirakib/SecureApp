@@ -151,12 +151,18 @@ def login():
         user = db.get_user_by_username_hash(username_hash)
 
         if not user:
+            db.create_audit_log(None, 'login_failed',
+                                f'Unknown username attempt: {username[:30]}',
+                                request.remote_addr)
             flash('Invalid username or password.', 'danger')
             return render_template('login.html')
 
         # Verify password
         password_hash = key_manager.hash_password(password, user['password_salt'])
         if password_hash != user['password_hash']:
+            db.create_audit_log(None, 'login_failed',
+                                f'Wrong password for user #{user["id"]}',
+                                request.remote_addr)
             flash('Invalid username or password.', 'danger')
             return render_template('login.html')
 

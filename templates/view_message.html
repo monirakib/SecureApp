@@ -20,6 +20,9 @@
                     {% else %}
                     <div class="hmac-badge unknown">· HMAC UNVERIFIED</div>
                     {% endif %}
+                    {% if message.expires_at %}
+                    <div class="hmac-badge unknown" style="color:var(--yellow,#ffd700);border-color:var(--yellow,#ffd700);">⏱ EXPIRES {{ message.expires_at[:10] }}</div>
+                    {% endif %}
                 </div>
                 <h2 style="font-size: 1.3rem; letter-spacing: 1px; color: var(--text-primary);">{{ message.subject }}</h2>
                 <div style="font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 1rem;">

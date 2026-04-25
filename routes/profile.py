@@ -8,6 +8,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 import database as db
 from key_management import key_manager
 from crypto.utils import secure_random_bytes
+from crypto.sha256 import sha256_hex
 from routes import login_required
 
 profile_bp = Blueprint('profile', __name__)
@@ -30,13 +31,21 @@ def view_profile():
         email = '[Decryption Error]'
         phone = ''
 
+    # Compute ECC key fingerprint (first 16 hex chars of SHA256 of public key)
+    try:
+        key_fp_full = sha256_hex(user['ecc_public_key'].encode('utf-8'))
+        key_fingerprint = ':'.join([key_fp_full[i:i+4] for i in range(0, 16, 4)])
+    except Exception:
+        key_fingerprint = 'N/A'
+
     profile = {
         'id': user['id'],
         'username': username,
         'email': email,
         'phone': phone,
         'role': user['role'],
-        'created_at': user['created_at']
+        'created_at': user['created_at'],
+        'key_fingerprint': key_fingerprint
     }
 
     return render_template('profile.html', profile=profile)

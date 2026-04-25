@@ -173,6 +173,8 @@ def _migrate_posts_table():
         "ALTER TABLE posts ADD COLUMN anonymous_codename TEXT DEFAULT ''",
         "ALTER TABLE documents ADD COLUMN message_id INTEGER",
         "ALTER TABLE documents ADD COLUMN dead_drop_id INTEGER",
+        "ALTER TABLE posts ADD COLUMN status TEXT DEFAULT 'new'",
+        "ALTER TABLE messages ADD COLUMN expires_at TEXT",
     ]
     for sql in migrations:
         try:
@@ -195,6 +197,22 @@ def _migrate_posts_table():
             UNIQUE(requester_id, addressee_id),
             FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (addressee_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+    # Create post_reactions table if it doesn't exist
+    conn = get_db()
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS post_reactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            post_id INTEGER NOT NULL,
+            reaction_type TEXT NOT NULL CHECK(reaction_type IN ('witness', 'corroborate')),
+            voter_hash TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(post_id, reaction_type, voter_hash),
+            FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
         )
     ''')
     conn.commit()
@@ -583,12 +601,12 @@ def count_documents():
 
 # ---- Message operations ----
 
-def create_message(sender_id, recipient_id, subject_enc, content_enc, sender_codename='', data_hmac=''):
+def create_message(sender_id, recipient_id, subject_enc, content_enc, sender_codename='', data_hmac='', expires_at=None):
     conn = get_db()
     conn.execute(
-        """INSERT INTO messages (sender_id, recipient_id, subject_enc, content_enc, sender_codename, data_hmac)
-           VALUES (?, ?, ?, ?, ?, ?)""",
-        (sender_id, recipient_id, subject_enc, content_enc, sender_codename, data_hmac)
+        """INSERT INTO messages (sender_id, recipient_id, subject_enc, content_enc, sender_codename, data_hmac, expires_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        (sender_id, recipient_id, subject_enc, content_enc, sender_codename, data_hmac, expires_at)
     )
     conn.commit()
     msg_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
@@ -599,7 +617,10 @@ def create_message(sender_id, recipient_id, subject_enc, content_enc, sender_cod
 def get_inbox(user_id):
     conn = get_db()
     msgs = conn.execute(
-        "SELECT * FROM messages WHERE recipient_id = ? ORDER BY created_at DESC", (user_id,)
+        """SELECT * FROM messages WHERE recipient_id = ?
+           AND (expires_at IS NULL OR expires_at > datetime('now'))
+           ORDER BY created_at DESC""",
+        (user_id,)
     ).fetchall()
     conn.close()
     return [dict(m) for m in msgs]
@@ -631,7 +652,9 @@ def mark_message_read(msg_id):
 def count_unread_messages(user_id):
     conn = get_db()
     count = conn.execute(
-        "SELECT COUNT(*) FROM messages WHERE recipient_id = ? AND is_read = 0", (user_id,)
+        """SELECT COUNT(*) FROM messages WHERE recipient_id = ? AND is_read = 0
+           AND (expires_at IS NULL OR expires_at > datetime('now'))""",
+        (user_id,)
     ).fetchone()[0]
     conn.close()
     return count
@@ -642,6 +665,63 @@ def delete_message(msg_id):
     conn.execute("DELETE FROM messages WHERE id = ?", (msg_id,))
     conn.commit()
     conn.close()
+
+
+def update_post_status(post_id, status):
+    conn = get_db()
+    conn.execute("UPDATE posts SET status = ? WHERE id = ?", (status, post_id))
+    conn.commit()
+    conn.close()
+
+
+def get_post_reactions(post_id):
+    """Return dict of {reaction_type: count} for a post."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT reaction_type, COUNT(*) as cnt FROM post_reactions WHERE post_id = ? GROUP BY reaction_type",
+        (post_id,)
+    ).fetchall()
+    conn.close()
+    return {row['reaction_type']: row['cnt'] for row in rows}
+
+
+def add_post_reaction(post_id, reaction_type, voter_hash):
+    """Add a reaction. Returns True if added, False if duplicate."""
+    conn = get_db()
+    try:
+        conn.execute(
+            "INSERT INTO post_reactions (post_id, reaction_type, voter_hash) VALUES (?, ?, ?)",
+            (post_id, reaction_type, voter_hash)
+        )
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.IntegrityError:
+        conn.close()
+        return False
+
+
+def bulk_update_tips_status(tip_ids, status):
+    if not tip_ids:
+        return
+    conn = get_db()
+    placeholders = ','.join('?' * len(tip_ids))
+    conn.execute(
+        f"UPDATE anonymous_tips SET status = ? WHERE id IN ({placeholders})",
+        [status] + list(tip_ids)
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_recent_failed_logins(limit=20):
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT * FROM audit_log WHERE action = 'login_failed' ORDER BY created_at DESC LIMIT ?",
+        (limit,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 
 # ---- Dead drop operations ----

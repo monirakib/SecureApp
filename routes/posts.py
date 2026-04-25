@@ -14,6 +14,7 @@ from key_management import key_manager
 from crypto.ecc import (ecc_encrypt_string, ecc_decrypt_string,
                          deserialize_ecc_public_key, serialize_ecc_public_key)
 from crypto.rsa import rsa_encrypt_bytes, rsa_decrypt_bytes
+from crypto.sha256 import sha256_hex
 from codenames import generate_codename
 from routes import login_required
 
@@ -160,7 +161,10 @@ def view_post(post_id):
             post['data_hmac'], post['title_enc'], post['content_enc'], post['user_id']
         )
 
-    return render_template('view_post.html', post=decrypted, hmac_ok=hmac_ok)
+    # Reactions
+    reactions = db.get_post_reactions(post_id)
+
+    return render_template('view_post.html', post=decrypted, hmac_ok=hmac_ok, reactions=reactions)
 
 
 @posts_bp.route('/posts/<int:post_id>/edit', methods=['GET', 'POST'])
@@ -223,6 +227,33 @@ def delete_post(post_id):
     db.delete_post(post_id)
     flash('Post deleted.', 'info')
     return redirect(url_for('posts.my_posts'))
+
+
+@posts_bp.route('/posts/<int:post_id>/react', methods=['POST'])
+@login_required
+def react_to_post(post_id):
+    """Add an anonymous reaction to a post."""
+    csrf = request.form.get('csrf_token', '')
+    if csrf != g.csrf_token:
+        abort(403)
+
+    reaction_type = request.form.get('reaction_type', '')
+    if reaction_type not in ('witness', 'corroborate'):
+        abort(400)
+
+    post = db.get_post_by_id(post_id)
+    if not post:
+        abort(404)
+
+    # voter_hash = SHA256(user_id) — deduplicate per user without storing identity on reaction
+    voter_hash = sha256_hex(str(g.user['id']).encode('utf-8'))
+    added = db.add_post_reaction(post_id, reaction_type, voter_hash)
+    if added:
+        flash('Reaction recorded.', 'success')
+    else:
+        flash('You already reacted with that.', 'info')
+
+    return redirect(url_for('posts.view_post', post_id=post_id))
 
 
 def _handle_file_upload(post_id=None, tip_id=None, message_id=None, dead_drop_id=None,

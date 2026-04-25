@@ -14,6 +14,7 @@
                         <th>Title</th>
                         <th>Category</th>
                         <th>Urgency</th>
+                        <th>Status</th>
                         <th>Author</th>
                         <th>Created</th>
                         <th>Actions</th>
@@ -26,6 +27,16 @@
                         <td style="font-weight: 600;">{{ post.title }}</td>
                         <td>{% if post.get('category') %}<span class="category-badge category-{{ post.get('category','other') }}" style="font-size:0.65rem;">{{ post.get('category','other')|upper }}</span>{% endif %}</td>
                         <td>{% if post.get('urgency') %}<span class="urgency-badge urgency-{{ post.get('urgency','medium') }}" style="font-size:0.65rem;">{{ post.get('urgency','medium')|upper }}</span>{% endif %}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.update_post_status', post_id=post.id) }}" class="d-flex gap-1">
+                                <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+                                <select name="status" class="form-select form-select-sm" style="width:auto;font-size:0.72rem;" onchange="this.form.submit()">
+                                    {% for s in ['new', 'reviewing', 'resolved'] %}
+                                    <option value="{{ s }}" {% if post.get('status','new') == s %}selected{% endif %}>{{ s|capitalize }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </td>
                         <td>{% if post.get('is_anonymous') %}<span style="color:var(--purple);">{{ post.owner_name }}</span>{% else %}{{ post.owner_name }}{% endif %}</td>
                         <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-muted);">{{ post.created_at }}</td>
                         <td>

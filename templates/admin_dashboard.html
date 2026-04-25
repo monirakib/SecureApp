@@ -81,4 +81,32 @@
         </div>
     </div>
 </div>
+
+<div class="row mt-4">
+    <div class="col-md-12 float-in float-in-delay-6">
+        <div class="card">
+            <div class="card-header" style="color:var(--pink);">⚠ RECENT FAILED LOGIN ATTEMPTS</div>
+            <div class="card-body p-0">
+                {% if failed_logins %}
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-dark"><tr><th>Details</th><th>IP Address</th><th>Time</th></tr></thead>
+                        <tbody>
+                        {% for fl in failed_logins %}
+                        <tr>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--pink);">{{ fl.details }}</td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--text-muted);">{{ fl.ip_address }}</td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--text-muted);">{{ fl.created_at }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="p-3 mb-0" style="color:var(--text-muted);">No failed login attempts recorded.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

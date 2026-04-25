@@ -12,13 +12,15 @@
         <div class="card post-card float-in float-in-delay-1">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
+                    <div class="d-flex flex-wrap gap-1 align-items-center">
                         {% if post.get('category') %}
                         <span class="category-badge category-{{ post.get('category', 'other') }}">{{ post.get('category', 'other')|upper }}</span>
                         {% endif %}
                         {% if post.get('urgency') %}
                         <span class="urgency-badge urgency-{{ post.get('urgency', 'medium') }}">{{ post.get('urgency', 'medium')|upper }}</span>
                         {% endif %}
+                        {% set st = post.get('status', 'new') %}
+                        <span class="status-badge status-{{ st }}" style="font-size:0.65rem;">{{ st|upper }}</span>
                     </div>
                     <div class="d-flex flex-column align-items-end gap-1">
                         <div class="encrypt-badge"><span class="dot"></span> DECRYPTED FROM ECC STORAGE</div>
@@ -54,6 +56,41 @@
                     📎 {{ doc.filename }} ({{ (doc.file_size / 1024)|int }}KB)
                 </a>
                 {% endfor %}
+                {% endif %}
+
+                <div style="border-top: 1px solid var(--glass-border); margin: 1.2rem 0 0.8rem;"></div>
+                <div style="font-size:0.72rem;color:var(--text-muted);letter-spacing:1px;margin-bottom:0.5rem;">COMMUNITY REACTIONS</div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <form method="POST" action="{{ url_for('posts.react_to_post', post_id=post.id) }}" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+                        <input type="hidden" name="reaction_type" value="witness">
+                        <button type="submit" class="btn btn-sm"
+                            style="border:1px solid var(--cyan);color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:0.78rem;">
+                            👁 I WITNESSED THIS &nbsp;<span style="background:rgba(0,255,255,0.15);padding:1px 6px;border-radius:3px;">{{ reactions.get('witness', 0) }}</span>
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('posts.react_to_post', post_id=post.id) }}" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+                        <input type="hidden" name="reaction_type" value="corroborate">
+                        <button type="submit" class="btn btn-sm"
+                            style="border:1px solid var(--yellow,#ffd700);color:var(--yellow,#ffd700);font-family:'JetBrains Mono',monospace;font-size:0.78rem;">
+                            ⚠ CORROBORATE &nbsp;<span style="background:rgba(255,215,0,0.15);padding:1px 6px;border-radius:3px;">{{ reactions.get('corroborate', 0) }}</span>
+                        </button>
+                    </form>
+                </div>
+
+                {% if g.user.role == 'admin' %}
+                <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
+                <div style="font-size:0.72rem;color:var(--text-muted);letter-spacing:1px;margin-bottom:0.5rem;">ADMIN: SET STATUS</div>
+                <form method="POST" action="{{ url_for('admin.update_post_status', post_id=post.id) }}" class="d-flex gap-2 align-items-center">
+                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+                    <select name="status" class="form-select form-select-sm" style="width:auto;">
+                        {% for s in ['new', 'reviewing', 'resolved'] %}
+                        <option value="{{ s }}" {% if post.get('status','new') == s %}selected{% endif %}>{{ s|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-outline-warning btn-sm">Update Status</button>
+                </form>
                 {% endif %}
             </div>
         </div>
