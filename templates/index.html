@@ -1,120 +1,358 @@
 {% extends "base.html" %}
 {% block title %}SecureApp - Anonymous Whistleblower & Secure Document Exchange{% endblock %}
 {% block content %}
-<div class="row justify-content-center" style="margin-top: 6vh;">
-    <div class="col-lg-10 text-center">
 
-        <div class="float-in">
-            <h1 class="hero-title glitch mb-3" data-text="SECUREAPP">SECUREAPP</h1>
+<!-- ===== HERO — split layout ===== -->
+<div class="row align-items-center mb-5 pt-3" style="min-height:62vh;">
+
+    <!-- Left: title, tagline, CTAs -->
+    <div class="col-lg-6 text-center text-lg-start float-in mb-4 mb-lg-0">
+        <div class="mb-1" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--text-muted);letter-spacing:2px;">
+            // SYSTEM ONLINE — CLEARANCE LEVEL: PUBLIC
         </div>
-
-        <div class="float-in float-in-delay-1">
-            <p class="hero-subtitle mb-4">
-                Anonymous Whistleblower &amp; Secure Document Exchange Platform.
-                End-to-end encrypted with RSA &amp; ECC cryptography,
-                self-destructing dead drops, and zero plaintext storage.
-                Every algorithm built from scratch.
-            </p>
+        <h1 class="hero-title glitch mb-3" data-text="SECUREAPP">SECUREAPP</h1>
+        <p class="hero-subtitle mb-4" style="margin:0;">
+            Anonymous Whistleblower &amp; Secure Document Exchange Platform.
+            End-to-end encrypted with RSA &amp; ECC cryptography,
+            self-destructing dead drops, and zero plaintext storage.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mt-4 mb-4 float-in float-in-delay-1">
+            <span class="encrypt-badge"><span class="dot"></span> ALL DATA ENCRYPTED AT REST</span>
+            <span class="live-indicator"><span class="live-dot"></span> LIVE</span>
         </div>
-
-        <div class="float-in float-in-delay-2 mb-5">
-            <span class="encrypt-badge">
-                <span class="dot"></span> ALL DATA ENCRYPTED AT REST
-            </span>
+        <div class="d-flex flex-wrap gap-2 float-in float-in-delay-2">
+            <a href="{{ url_for('tips.submit_tip') }}" class="btn btn-primary btn-lg">⚑ SUBMIT TIP</a>
+            <a href="{{ url_for('deaddrops.dead_drops_page') }}" class="btn btn-outline-primary btn-lg">☠ DEAD DROPS</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-lg">⏎ LOGIN</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary btn-lg">+ REGISTER</a>
         </div>
+    </div>
 
-        <div class="row justify-content-center mt-4 mb-4">
-            <div class="col-md-3 float-in float-in-delay-2">
-                <div class="card neon-card mb-3">
-                    <div class="card-body text-center py-4">
-                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; filter: drop-shadow(0 0 15px rgba(0,240,255,0.4));">⚑</div>
-                        <h5 style="font-size: 0.8rem; letter-spacing: 2px; color: var(--cyan);">ANONYMOUS TIPS</h5>
-                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.85rem;">Submit tips without login. No trace, no identity.</p>
-                    </div>
-                </div>
+    <!-- Right: fake boot terminal -->
+    <div class="col-lg-6 float-in float-in-delay-3">
+        <div class="boot-terminal">
+            <div class="boot-terminal-header">
+                <span class="t-dot" style="background:#ff5f56;"></span>
+                <span class="t-dot" style="background:#ffbd2e;margin-left:5px;"></span>
+                <span class="t-dot" style="background:#27c93f;margin-left:5px;"></span>
+                <span class="t-title-bar">SECUREAPP v2.0 — SYSTEM BOOT</span>
             </div>
-            <div class="col-md-3 float-in float-in-delay-3">
-                <div class="card neon-card mb-3">
-                    <div class="card-body text-center py-4">
-                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; filter: drop-shadow(0 0 15px rgba(180,0,255,0.4));">☠</div>
-                        <h5 style="font-size: 0.8rem; letter-spacing: 2px; color: var(--purple);">DEAD DROPS</h5>
-                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.85rem;">Self-destructing messages. One-time read, then gone.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 float-in float-in-delay-4">
-                <div class="card neon-card mb-3">
-                    <div class="card-body text-center py-4">
-                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; filter: drop-shadow(0 0 15px rgba(0,255,136,0.4));">📎</div>
-                        <h5 style="font-size: 0.8rem; letter-spacing: 2px; color: var(--green);">SECURE DOCS</h5>
-                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.85rem;">Upload encrypted documents with hybrid AES+RSA.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 float-in float-in-delay-5">
-                <div class="card neon-card mb-3">
-                    <div class="card-body text-center py-4">
-                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; filter: drop-shadow(0 0 15px rgba(255,0,102,0.4));">✉</div>
-                        <h5 style="font-size: 0.8rem; letter-spacing: 2px; color: var(--pink);">SECURE MESSAGING</h5>
-                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.85rem;">Encrypted communication with anonymous option.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row justify-content-center mb-4">
-            <div class="col-md-3 float-in float-in-delay-3">
-                <div class="card neon-card mb-3">
-                    <div class="card-body text-center py-3">
-                        <div style="font-size: 2rem; margin-bottom: 0.3rem;">⚿</div>
-                        <h5 style="font-size: 0.7rem; letter-spacing: 2px; color: var(--cyan);">RSA + ECC</h5>
-                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.8rem;">Dual asymmetric encryption from scratch</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 float-in float-in-delay-4">
-                <div class="card neon-card mb-3">
-                    <div class="card-body text-center py-3">
-                        <div style="font-size: 2rem; margin-bottom: 0.3rem;">⬡</div>
-                        <h5 style="font-size: 0.7rem; letter-spacing: 2px; color: var(--purple);">2FA EMAIL</h5>
-                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.8rem;">Two-factor verification via email</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 float-in float-in-delay-5">
-                <div class="card neon-card mb-3">
-                    <div class="card-body text-center py-3">
-                        <div style="font-size: 2rem; margin-bottom: 0.3rem;">◈</div>
-                        <h5 style="font-size: 0.7rem; letter-spacing: 2px; color: var(--green);">HMAC INTEGRITY</h5>
-                        <p class="mb-0" style="color: var(--text-secondary); font-size: 0.8rem;">Tamper detection on all stored data</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="float-in float-in-delay-5 mb-4">
-            <a href="{{ url_for('tips.submit_tip') }}" class="btn btn-primary btn-lg me-2">
-                ⚑ SUBMIT ANONYMOUS TIP
-            </a>
-            <a href="{{ url_for('deaddrops.dead_drops_page') }}" class="btn btn-outline-primary btn-lg me-2">
-                ☠ DEAD DROPS
-            </a>
-        </div>
-
-        <div class="float-in float-in-delay-6 mb-3">
-            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary me-2">
-                ⏎ LOGIN
-            </a>
-            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary">
-                + REGISTER
-            </a>
-        </div>
-
-        <div class="float-in float-in-delay-6 mt-4">
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); letter-spacing: 1px; overflow: hidden; white-space: nowrap;">
-                <span class="decrypt-text">SHA-256 ◈ HMAC-SHA256 ◈ RSA-1024 ◈ ECC-SECP256K1 ◈ ELGAMAL ◈ XOR-CTR ◈ MILLER-RABIN ◈ KOBLITZ ◈ DEAD-DROPS ◈ ZERO-KNOWLEDGE</span>
+            <div class="boot-terminal-body" id="boot-terminal">
+                <div id="boot-current-line"><span class="t-prompt">$&nbsp;</span><span id="boot-output"></span><span class="t-cursor">█</span></div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ===== STATS BAR ===== -->
+<div class="row text-center mb-5 float-in float-in-delay-2">
+    <div class="col-6 col-md-3 mb-3">
+        <div class="home-stat-chip" style="--chip-color:var(--cyan);--chip-glow:var(--cyan-glow);">
+            <div class="home-stat-num">256</div>
+            <div class="home-stat-lbl">BIT ECC KEY</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-3">
+        <div class="home-stat-chip" style="--chip-color:var(--purple);--chip-glow:var(--purple-glow);">
+            <div class="home-stat-num">0</div>
+            <div class="home-stat-lbl">PLAINTEXT STORED</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-3">
+        <div class="home-stat-chip" style="--chip-color:var(--green);--chip-glow:rgba(0,255,136,0.4);">
+            <div class="home-stat-num">7</div>
+            <div class="home-stat-lbl">CRYPTO MODULES</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-3">
+        <div class="home-stat-chip" style="--chip-color:var(--pink);--chip-glow:rgba(255,0,102,0.4);">
+            <div class="home-stat-num">1024</div>
+            <div class="home-stat-lbl">RSA KEY BITS</div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== FEATURE CARDS ===== -->
+<div class="row justify-content-center mb-4">
+    <div class="col-md-3 float-in float-in-delay-2">
+        <div class="card neon-card mb-3">
+            <div class="card-body text-center py-4">
+                <div class="feature-icon" style="filter:drop-shadow(0 0 15px rgba(0,240,255,0.5));">⚑</div>
+                <h5 class="feature-label" style="color:var(--cyan);">ANONYMOUS TIPS</h5>
+                <p class="mb-0 feature-desc">Submit tips without login. No trace, no identity.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 float-in float-in-delay-3">
+        <div class="card neon-card mb-3">
+            <div class="card-body text-center py-4">
+                <div class="feature-icon" style="filter:drop-shadow(0 0 15px rgba(180,0,255,0.5));">☠</div>
+                <h5 class="feature-label" style="color:#d966ff;">DEAD DROPS</h5>
+                <p class="mb-0 feature-desc">Self-destructing messages. One-time read, then gone.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 float-in float-in-delay-4">
+        <div class="card neon-card mb-3">
+            <div class="card-body text-center py-4">
+                <div class="feature-icon" style="filter:drop-shadow(0 0 15px rgba(0,255,136,0.5));">📎</div>
+                <h5 class="feature-label" style="color:var(--green);">SECURE DOCS</h5>
+                <p class="mb-0 feature-desc">Upload encrypted documents with hybrid AES+RSA.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 float-in float-in-delay-5">
+        <div class="card neon-card mb-3">
+            <div class="card-body text-center py-4">
+                <div class="feature-icon" style="filter:drop-shadow(0 0 15px rgba(255,0,102,0.5));">✉</div>
+                <h5 class="feature-label" style="color:#ff80b3;">SECURE MESSAGES</h5>
+                <p class="mb-0 feature-desc">Encrypted communication with anonymous option.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== CRYPTO TECH MINI CARDS ===== -->
+<div class="row justify-content-center mb-5">
+    <div class="col-md-3 float-in float-in-delay-3">
+        <div class="card neon-card mb-3">
+            <div class="card-body text-center py-3">
+                <div style="font-size:2rem;margin-bottom:0.3rem;">⚿</div>
+                <h5 style="font-size:0.7rem;letter-spacing:2px;color:var(--cyan);">RSA + ECC</h5>
+                <p class="mb-0" style="color:whitesmoke;font-size:0.8rem;">Dual asymmetric encryption from scratch</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 float-in float-in-delay-4">
+        <div class="card neon-card mb-3">
+            <div class="card-body text-center py-3">
+                <div style="font-size:2rem;margin-bottom:0.3rem;">⬡</div>
+                <h5 style="font-size:0.7rem;letter-spacing:2px;color:#d966ff;">2FA EMAIL</h5>
+                <p class="mb-0" style="color:whitesmoke;font-size:0.8rem;">Two-factor verification via email</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 float-in float-in-delay-5">
+        <div class="card neon-card mb-3">
+            <div class="card-body text-center py-3">
+                <div style="font-size:2rem;margin-bottom:0.3rem;">◈</div>
+                <h5 style="font-size:0.7rem;letter-spacing:2px;color:var(--green);">HMAC INTEGRITY</h5>
+                <p class="mb-0" style="color:whitesmoke;font-size:0.8rem;">Tamper detection on all stored data</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SYSTEM STATUS + CIPHER BREAKER (side by side on desktop) ===== -->
+<div class="row justify-content-center mb-5 float-in">
+
+    <!-- System Status -->
+    <div class="col-lg-5 mb-4 mb-lg-0">
+        <div class="card neon-card h-100">
+            <div class="card-body py-4 px-4">
+                <h6 class="panel-heading" style="color:var(--cyan);">◉ SYSTEM STATUS</h6>
+                <div class="status-grid">
+                    <div class="sys-status-row"><span class="sys-dot"></span><span class="sys-name">RSA-1024 ENGINE</span><span class="sys-line"></span><span class="sys-val online">ONLINE</span></div>
+                    <div class="sys-status-row"><span class="sys-dot"></span><span class="sys-name">ECC secp256k1</span><span class="sys-line"></span><span class="sys-val online">ONLINE</span></div>
+                    <div class="sys-status-row"><span class="sys-dot"></span><span class="sys-name">HMAC-SHA256</span><span class="sys-line"></span><span class="sys-val online">ONLINE</span></div>
+                    <div class="sys-status-row"><span class="sys-dot"></span><span class="sys-name">DEAD DROP SERVER</span><span class="sys-line"></span><span class="sys-val online">ONLINE</span></div>
+                    <div class="sys-status-row"><span class="sys-dot"></span><span class="sys-name">2FA AUTH MODULE</span><span class="sys-line"></span><span class="sys-val online">ONLINE</span></div>
+                    <div class="sys-status-row"><span class="sys-dot"></span><span class="sys-name">ZERO-KNOWLEDGE STORE</span><span class="sys-line"></span><span class="sys-val online">ONLINE</span></div>
+                    <div class="sys-status-row"><span class="sys-dot"></span><span class="sys-name">AUDIT LOGGER</span><span class="sys-line"></span><span class="sys-val online">ONLINE</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cipher Breaker Game -->
+    <div class="col-lg-7">
+        <div class="card neon-card h-100" style="border-color:rgba(180,0,255,0.3)!important;">
+            <div class="card-body py-4 px-4">
+                <h6 class="panel-heading" style="color:var(--green);">⚿ CIPHER BREAKER — HEX EDITION</h6>
+                <p style="color:whitesmoke;font-size:0.82rem;margin-bottom:1rem;">
+                    Crack the 4-digit hex code in 6 attempts.&nbsp;
+                    <span style="color:var(--green);">◈ right place</span> &nbsp;
+                    <span style="color:var(--yellow);">◉ wrong place</span> &nbsp;
+                    <span style="color:whitesmoke;">○ not in code</span>
+                </p>
+                <div id="cipher-board" style="font-family:'JetBrains Mono',monospace;min-height:120px;margin-bottom:1rem;"></div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <div class="d-flex gap-1">
+                        <input id="hx0" type="text" maxlength="1" class="hex-input" placeholder="0">
+                        <input id="hx1" type="text" maxlength="1" class="hex-input" placeholder="F">
+                        <input id="hx2" type="text" maxlength="1" class="hex-input" placeholder="A">
+                        <input id="hx3" type="text" maxlength="1" class="hex-input" placeholder="3">
+                    </div>
+                    <button id="cipher-submit" class="btn btn-sm cipher-btn-submit">SUBMIT</button>
+                    <button id="cipher-reset" class="btn btn-sm cipher-btn-reset">RESET</button>
+                    <span id="cipher-attempts" style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);">6 left</span>
+                </div>
+                <div id="cipher-msg" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;margin-top:0.8rem;min-height:1.4rem;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SCROLLING TICKER ===== -->
+<div class="float-in mt-2 mb-5 text-center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--text-muted);letter-spacing:1px;overflow:hidden;white-space:nowrap;">
+        <span class="decrypt-text">SHA-256 ◈ HMAC-SHA256 ◈ RSA-1024 ◈ ECC-SECP256K1 ◈ ELGAMAL ◈ XOR-CTR ◈ MILLER-RABIN ◈ KOBLITZ ◈ DEAD-DROPS ◈ ZERO-KNOWLEDGE</span>
+    </div>
+</div>
+
+<!-- ===== INLINE SCRIPTS ===== -->
+<script>
+/* --- BOOT TERMINAL --- */
+(function(){
+    const lines = [
+        {t:'> INITIALIZING SECUREAPP v2.0...', c:'dim'},
+        {t:'> LOADING RSA-1024 KEY PAIR......... OK', c:'green'},
+        {t:'> LOADING ECC secp256k1 CURVE....... OK', c:'green'},
+        {t:'> HMAC-SHA256 INTEGRITY MODULE...... OK', c:'green'},
+        {t:'> ZERO PLAINTEXT STORAGE............ ENABLED', c:'green'},
+        {t:'> DEAD DROP SERVER.................. ARMED', c:'pink'},
+        {t:'> 2FA EMAIL AUTH.................... ACTIVE', c:'cyan'},
+        {t:'> AUDIT LOG......................... RUNNING', c:'cyan'},
+        {t:'> ----------------------------------------', c:'dim'},
+        {t:'> ALL SYSTEMS NOMINAL. CONNECTION SECURED.', c:'bright'},
+    ];
+    const colors = {
+        green: 'var(--green)', pink: 'var(--pink)',
+        cyan: 'var(--cyan)', bright: '#fff',
+        dim: 'var(--text-muted)'
+    };
+    const outEl = document.getElementById('boot-output');
+    const bodyEl = document.getElementById('boot-terminal');
+    const curLine = document.getElementById('boot-current-line');
+    if (!outEl) return;
+    let li = 0, ci = 0;
+    function tick() {
+        if (li >= lines.length) {
+            curLine.style.display = 'none'; return;
+        }
+        const txt = lines[li].t;
+        if (ci < txt.length) {
+            outEl.textContent += txt[ci++];
+            setTimeout(tick, 18);
+        } else {
+            const d = document.createElement('div');
+            d.className = 't-done-line';
+            d.style.color = colors[lines[li].c] || colors.dim;
+            d.textContent = txt;
+            bodyEl.insertBefore(d, curLine);
+            outEl.textContent = '';
+            li++; ci = 0;
+            setTimeout(tick, 100);
+        }
+    }
+    setTimeout(tick, 500);
+})();
+
+/* --- CIPHER BREAKER --- */
+(function(){
+    const HEX = '0123456789ABCDEF';
+    let secret, attempts, done;
+    const MAX = 6;
+
+    function newGame(focus){
+        secret = Array.from({length:4}, ()=>HEX[Math.floor(Math.random()*16)]).join('');
+        attempts = 0; done = false;
+        document.getElementById('cipher-board').innerHTML = '';
+        document.getElementById('cipher-msg').textContent = '';
+        document.getElementById('cipher-attempts').textContent = MAX + ' left';
+        ['hx0','hx1','hx2','hx3'].forEach(id => {
+            const el = document.getElementById(id);
+            el.value = ''; el.disabled = false;
+        });
+        document.getElementById('cipher-submit').disabled = false;
+        if (focus) document.getElementById('hx0').focus();
+    }
+
+    function check(guess){
+        const result = Array(4).fill('absent');
+        const used = Array(4).fill(false);
+        for (let i=0;i<4;i++) if (guess[i]===secret[i]){ result[i]='correct'; used[i]=true; }
+        for (let i=0;i<4;i++){
+            if (result[i]==='correct') continue;
+            for (let j=0;j<4;j++){
+                if (!used[j] && guess[i]===secret[j]){ result[i]='present'; used[j]=true; break; }
+            }
+        }
+        return result;
+    }
+
+    function submitGuess(){
+        if (done) return;
+        const vals = ['hx0','hx1','hx2','hx3'].map(id => document.getElementById(id).value.toUpperCase());
+        if (vals.some(v => v==='' || !HEX.includes(v))){
+            document.getElementById('cipher-msg').innerHTML = '<span style="color:var(--pink);">Enter 4 valid hex characters (0-9, A-F)</span>';
+            return;
+        }
+        const guess = vals.join('');
+        const result = check(guess);
+        attempts++;
+
+        const row = document.createElement('div');
+        row.className = 'd-flex align-items-center gap-3 mb-1';
+        row.style.fontFamily = "'JetBrains Mono',monospace";
+        row.style.fontSize = '0.88rem';
+
+        const gEl = document.createElement('span');
+        gEl.style.letterSpacing = '6px';
+        gEl.style.color = 'var(--text-primary)';
+        gEl.textContent = vals.join(' ');
+
+        const hEl = document.createElement('span');
+        hEl.style.letterSpacing = '6px';
+        hEl.innerHTML = result.map(r => {
+            if (r==='correct') return '<span style="color:var(--green)">◈</span>';
+            if (r==='present') return '<span style="color:var(--yellow)">◉</span>';
+            return '<span style="color:var(--text-muted)">○</span>';
+        }).join('');
+
+        row.append(gEl, hEl);
+        document.getElementById('cipher-board').prepend(row);
+        ['hx0','hx1','hx2','hx3'].forEach(id => document.getElementById(id).value = '');
+
+        const left = MAX - attempts;
+        document.getElementById('cipher-attempts').textContent = left + ' left';
+
+        if (result.every(r => r==='correct')){
+            done = true;
+            document.getElementById('cipher-msg').innerHTML =
+                `<span style="color:var(--green);">✓ CRACKED in ${attempts} attempt${attempts>1?'s':''}! Code: <b>${secret}</b></span>`;
+            lockGame();
+        } else if (attempts >= MAX){
+            done = true;
+            document.getElementById('cipher-msg').innerHTML =
+                `<span style="color:var(--pink);">✗ ACCESS DENIED. Code was <b style="color:var(--cyan)">${secret}</b></span>`;
+            lockGame();
+        } else {
+            document.getElementById('hx0').focus();
+        }
+    }
+
+    function lockGame(){
+        ['hx0','hx1','hx2','hx3'].forEach(id => document.getElementById(id).disabled = true);
+        document.getElementById('cipher-submit').disabled = true;
+    }
+
+    ['hx0','hx1','hx2','hx3'].forEach((id,i) => {
+        const el = document.getElementById(id);
+        el.addEventListener('input', e => {
+            e.target.value = e.target.value.toUpperCase().replace(/[^0-9A-F]/g,'');
+            if (e.target.value && i < 3) document.getElementById('hx'+(i+1)).focus();
+        });
+        el.addEventListener('keydown', e => {
+            if (e.key==='Enter') submitGuess();
+            if (e.key==='Backspace' && !e.target.value && i>0) document.getElementById('hx'+(i-1)).focus();
+        });
+    });
+
+    document.getElementById('cipher-submit').addEventListener('click', submitGuess);
+    document.getElementById('cipher-reset').addEventListener('click', () => newGame(true));
+    newGame(false);
+})();
+</script>
+
 {% endblock %}

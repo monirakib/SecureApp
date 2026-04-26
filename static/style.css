@@ -19,6 +19,9 @@
     --green: #00ff88;
     --green-dim: rgba(0, 255, 136, 0.15);
     --yellow: #ffdd00;
+    --red: #ff3333;
+    --red-dim: rgba(255, 51, 51, 0.15);
+    --red-glow: rgba(255, 51, 51, 0.4);
     --text-primary: #e0e0f0;
     --text-secondary: #8888aa;
     --text-muted: #555577;
@@ -243,7 +246,23 @@ body::before {
 }
 
 /* NEON BORDER CARD */
-.neon-card { position: relative; border: none !important; }
+.neon-card {
+    position: relative;
+    border: none !important;
+    background: #08080f !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    isolation: isolate;
+}
+
+.neon-card .card-body { background: transparent; }
+
+/* Suppress the glass shimmer overlay on neon cards */
+.neon-card::before { display: none !important; }
+
+.neon-card h5, .neon-card p, .neon-card .feature-desc {
+    text-shadow: none;
+}
 
 .neon-card::after {
     content: '';
@@ -329,17 +348,20 @@ body::before {
 }
 
 .btn-outline-secondary {
-    color: var(--text-secondary) !important;
-    border-color: var(--text-muted) !important;
+    color: var(--red) !important;
+    border-color: var(--red) !important;
+    background: var(--red-dim) !important;
     font-family: 'Rajdhani', sans-serif;
     font-weight: 600;
     letter-spacing: 1px;
+    box-shadow: 0 0 10px rgba(255, 51, 51, 0.15);
 }
 
 .btn-outline-secondary:hover {
-    background: rgba(136, 136, 170, 0.1) !important;
-    border-color: var(--text-secondary) !important;
-    color: var(--text-primary) !important;
+    background: var(--red) !important;
+    border-color: var(--red) !important;
+    color: #fff !important;
+    box-shadow: 0 0 20px var(--red-glow);
 }
 
 .btn-outline-danger {
@@ -805,7 +827,7 @@ footer {
     border-radius: 4px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.78rem;
-    color: var(--text-secondary);
+    color: var(--green);
 }
 
 /* HEX BACKGROUND TEXT */
@@ -1177,4 +1199,259 @@ footer {
     .feed-stat-num { font-size: 1.2rem; }
     .feed-stat-sep { margin: 0 0.5rem; }
     .feed-stat { min-width: 70px; }
+}
+
+/* =====================================================
+   HOME PAGE — BOOT TERMINAL
+   ===================================================== */
+
+.boot-terminal {
+    background: rgba(5, 5, 15, 0.95);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(0, 240, 255, 0.06), inset 0 0 60px rgba(0,0,0,0.4);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.boot-terminal-header {
+    background: rgba(15, 15, 30, 0.95);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.t-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    opacity: 0.85;
+}
+
+.t-title-bar {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-left: 12px;
+    text-transform: uppercase;
+}
+
+.boot-terminal-body {
+    padding: 14px 18px;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 2px;
+    overflow: hidden;
+}
+
+.t-done-line {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    white-space: pre;
+}
+
+#boot-current-line {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.t-prompt { color: var(--cyan); }
+
+.t-cursor {
+    display: inline-block;
+    color: var(--cyan);
+    animation: cursorBlink 1s step-end infinite;
+}
+
+@keyframes cursorBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* =====================================================
+   HOME PAGE — STATS CHIPS
+   ===================================================== */
+
+.home-stat-chip {
+    background: var(--glass-bg);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-top: 2px solid var(--chip-color, var(--cyan));
+    border-radius: 10px;
+    padding: 1.2rem 0.5rem;
+    text-align: center;
+    backdrop-filter: blur(12px);
+    transition: box-shadow 0.3s;
+}
+
+.home-stat-chip:hover {
+    box-shadow: 0 0 24px var(--chip-glow, var(--cyan-glow));
+}
+
+.home-stat-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+    color: var(--chip-color, var(--cyan));
+    text-shadow: 0 0 18px var(--chip-glow, var(--cyan-glow));
+}
+
+.home-stat-lbl {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: whitesmoke;
+}
+
+/* =====================================================
+   HOME PAGE — FEATURE CARDS
+   ===================================================== */
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.feature-label {
+    font-size: 0.78rem;
+    letter-spacing: 2px;
+    margin-bottom: 0.4rem;
+}
+
+.feature-desc {
+    color: whitesmoke;
+    font-size: 0.85rem;
+}
+
+/* =====================================================
+   HOME PAGE — SYSTEM STATUS PANEL
+   ===================================================== */
+
+.panel-heading {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+}
+
+.status-grid { display: flex; flex-direction: column; gap: 0.55rem; }
+
+.sys-status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+}
+
+.sys-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    flex-shrink: 0;
+    animation: livePulse 2s ease-in-out infinite;
+}
+
+.sys-name {
+    color: whitesmoke;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.sys-line {
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, var(--glass-border) 0, var(--glass-border) 4px, transparent 4px, transparent 8px);
+    min-width: 20px;
+}
+
+.sys-val { font-weight: 700; letter-spacing: 1px; flex-shrink: 0; }
+.sys-val.online { color: var(--green); }
+.sys-val.offline { color: var(--pink); }
+.sys-val.warn { color: var(--yellow); }
+
+/* =====================================================
+   HOME PAGE — CIPHER BREAKER
+   ===================================================== */
+
+.hex-input {
+    width: 44px; height: 44px;
+    background: rgba(10, 10, 25, 0.9);
+    border: 1px solid var(--purple);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    caret-color: var(--cyan);
+    transition: all 0.2s;
+    box-shadow: 0 0 8px rgba(180, 0, 255, 0.15);
+    outline: none;
+}
+
+.hex-input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 2px var(--cyan-dim), 0 0 12px rgba(0,240,255,0.2);
+    background: rgba(0, 240, 255, 0.04);
+}
+
+.hex-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.cipher-btn-submit {
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid var(--green) !important;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 0.45rem 1rem;
+    transition: all 0.2s;
+}
+
+.cipher-btn-submit:hover:not(:disabled) {
+    background: var(--purple);
+    color: #fff;
+    box-shadow: 0 0 16px var(--purple-glow);
+}
+
+.cipher-btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.cipher-btn-reset {
+    background: transparent;
+    color: var(--red) !important;
+    border: 1px solid var(--red) !important;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.68rem;
+    letter-spacing: 2px;
+    padding: 0.45rem 1rem;
+    transition: all 0.2s;
+}
+
+.cipher-btn-reset:hover {
+    background: var(--red) !important;
+    color: #fff !important;
+    border-color: var(--red) !important;
+    box-shadow: 0 0 16px var(--red-glow);
+}
+
+@media (max-width: 768px) {
+    .boot-terminal-body { min-height: 180px; }
+    .home-stat-num { font-size: 1.6rem; }
+    .hex-input { width: 38px; height: 38px; font-size: 1rem; }
 }

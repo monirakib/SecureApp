@@ -16,7 +16,7 @@
                            autocomplete="off">
                     <button type="submit" class="btn btn-primary" style="white-space:nowrap;">⬡ Send Request</button>
                 </form>
-                <small style="color:var(--text-muted);font-size:0.78rem;">You must know the exact username to add someone.</small>
+                <small style="color:whitesmoke;font-size:0.78rem;">You must know the exact username to add someone.</small>
             </div>
         </div>
 
@@ -56,13 +56,13 @@
         {% if sent %}
         <div class="card neon-card float-in float-in-delay-2 mb-4">
             <div class="card-body p-4">
-                <h6 style="font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:2px;color:var(--text-muted);">SENT REQUESTS</h6>
+                <h6 style="font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:2px;color:var(--green);">SENT REQUESTS</h6>
                 <div class="list-group list-group-flush mt-2">
                     {% for req in sent %}
                     <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-0">
                         <div>
                             <span class="data-chip">{{ req.username }}</span>
-                            <small style="color:var(--text-muted);margin-left:0.5rem;font-size:0.75rem;">{{ req.created_at }}</small>
+                            <small style="color:whitesmoke;margin-left:0.5rem;font-size:0.75rem;">{{ req.created_at }}</small>
                         </div>
                         <form method="POST" action="{{ url_for('friends.cancel_request', friendship_id=req.friendship_id) }}">
                             <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
@@ -87,7 +87,7 @@
                     <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-0">
                         <div>
                             <span class="data-chip">{{ f.username }}</span>
-                            <small style="color:var(--text-muted);margin-left:0.5rem;font-size:0.75rem;">since {{ f.since }}</small>
+                            <small style="color:whitesmoke;margin-left:0.5rem;font-size:0.75rem;">since {{ f.since }}</small>
                         </div>
                         <div class="d-flex gap-2">
                             <a href="{{ url_for('messages.compose') }}?to={{ f.user_id }}"
@@ -102,7 +102,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p style="color:var(--text-muted);font-size:0.88rem;margin-top:0.75rem;">
+                <p style="color:whitesmoke;font-size:0.88rem;margin-top:0.75rem;">
                     No friends yet. Add someone using their exact username above.
                 </p>
                 {% endif %}
