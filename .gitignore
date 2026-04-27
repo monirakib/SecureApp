@@ -1,0 +1,21 @@
+# Report generator and output
+generate_report.py
+*.pdf
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Database
+app.db
+
+# Keys (never commit)
+keys/
+
+# Uploads
+uploads/
+
+# Environment
+.env
+*.env
