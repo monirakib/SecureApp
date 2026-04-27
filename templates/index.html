@@ -25,8 +25,8 @@
       <a href="{{ url_for('tips.submit_tip') }}" class="btn btn-primary" style="font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:2px;padding:11px 24px;">⚑ SUBMIT TIP</a>
       <a href="{{ url_for('deaddrops.dead_drops_page') }}" style="font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:2px;padding:11px 24px;border:1px solid rgba(255,0,102,0.4);border-radius:6px;color:var(--pink);text-decoration:none;transition:background .2s;" onmouseenter="this.style.background='rgba(255,0,102,0.1)'" onmouseleave="this.style.background='transparent'">☠ DEAD DROPS</a>
       {% if not g.user %}
-      <a href="{{ url_for('auth.login') }}" style="font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:2px;padding:11px 24px;border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:var(--text-muted);text-decoration:none;transition:background .2s;" onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">⏎ LOGIN</a>
-      <a href="{{ url_for('auth.register') }}" style="font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:2px;padding:11px 24px;border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:var(--text-muted);text-decoration:none;transition:background .2s;" onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">✚ REGISTER</a>
+      <a href="{{ url_for('auth.login') }}" style="font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:2px;padding:11px 24px;border:1px solid rgba(0,240,255,0.45);border-radius:6px;color:var(--cyan);text-decoration:none;transition:background .2s,box-shadow .2s;box-shadow:0 0 12px rgba(0,240,255,0.18);" onmouseenter="this.style.background='rgba(0,240,255,0.1)';this.style.boxShadow='0 0 20px rgba(0,240,255,0.3)'" onmouseleave="this.style.background='transparent';this.style.boxShadow='0 0 12px rgba(0,240,255,0.18)'">⏎ LOGIN</a>
+      <a href="{{ url_for('auth.register') }}" style="font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:2px;padding:11px 24px;border:1px solid rgba(0,255,136,0.45);border-radius:6px;color:var(--green);text-decoration:none;transition:background .2s,box-shadow .2s;box-shadow:0 0 12px rgba(0,255,136,0.16);" onmouseenter="this.style.background='rgba(0,255,136,0.1)';this.style.boxShadow='0 0 20px rgba(0,255,136,0.28)'" onmouseleave="this.style.background='transparent';this.style.boxShadow='0 0 12px rgba(0,255,136,0.16)'">✚ REGISTER</a>
       {% endif %}
     </div>
   </div>
@@ -126,7 +126,7 @@
       crack the 4-digit hex code in 6 attempts &nbsp;
       <span style="color:var(--green);">◈ right place</span> &nbsp;
       <span style="color:var(--yellow);">◉ wrong place</span> &nbsp;
-      <span style="color:var(--text-muted);">○ miss</span>
+      <span style="color:var(--red);">○ miss</span>
     </div>
     <div id="cipher-board" style="font-family:'JetBrains Mono',monospace;min-height:120px;margin-bottom:14px;"></div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
