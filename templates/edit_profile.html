@@ -60,15 +60,23 @@
       {# NEW PASSWORD #}
       <div class="compose-field">
         <label class="compose-label">NEW PASSWORD</label>
-        <input type="password" name="new_password" class="compose-input" id="new_password"
-               minlength="6" autocomplete="new-password" placeholder="leave blank to keep current">
+        <div style="position:relative;">
+          <input type="password" name="new_password" class="compose-input" id="new_password"
+                 minlength="6" autocomplete="new-password" placeholder="leave blank to keep current" style="padding-right:42px;">
+          <button type="button" onclick="(function(){ var i=document.getElementById('new_password'); i.type=i.type==='password'?'text':'password'; this.textContent=i.type==='password'?'👁':'🔒'; }).call(this)"
+                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-muted);padding:2px 4px;line-height:1;">👁</button>
+        </div>
       </div>
 
       {# CONFIRM NEW PASSWORD #}
       <div class="compose-field">
         <label class="compose-label">CONFIRM NEW PASSWORD</label>
-        <input type="password" name="confirm_password" class="compose-input" id="confirm_password"
-               autocomplete="new-password" placeholder="repeat new password">
+        <div style="position:relative;">
+          <input type="password" name="confirm_password" class="compose-input" id="confirm_password"
+                 autocomplete="new-password" placeholder="repeat new password" style="padding-right:42px;">
+          <button type="button" onclick="(function(){ var i=document.getElementById('confirm_password'); i.type=i.type==='password'?'text':'password'; this.textContent=i.type==='password'?'👁':'🔒'; }).call(this)"
+                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-muted);padding:2px 4px;line-height:1;">👁</button>
+        </div>
       </div>
 
       {# SECTION DIVIDER — authorization #}
@@ -81,8 +89,12 @@
         <label class="compose-label">CURRENT PASSWORD
           <span style="float:right;font-size:0.6rem;color:var(--pink);font-weight:600;letter-spacing:1px;">REQUIRED</span>
         </label>
-        <input type="password" name="current_password" class="compose-input" id="current_password"
-               required autocomplete="current-password" placeholder="authorize to apply changes">
+        <div style="position:relative;">
+          <input type="password" name="current_password" class="compose-input" id="current_password"
+                 required autocomplete="current-password" placeholder="authorize to apply changes" style="padding-right:42px;">
+          <button type="button" onclick="(function(){ var i=document.getElementById('current_password'); i.type=i.type==='password'?'text':'password'; this.textContent=i.type==='password'?'👁':'🔒'; }).call(this)"
+                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-muted);padding:2px 4px;line-height:1;">👁</button>
+        </div>
       </div>
 
       {# ACTIONS #}
