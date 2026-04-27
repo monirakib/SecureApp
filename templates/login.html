@@ -35,9 +35,13 @@
         {# Password #}
         <div style="margin-bottom:24px;">
           <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:7px;">PASSPHRASE</label>
-          <input type="password" name="password" required autocomplete="current-password" placeholder="enter passphrase..."
-                 style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(0,240,255,0.15);border-radius:8px;padding:11px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color .2s;"
-                 onfocus="this.style.borderColor='rgba(0,240,255,0.5)'" onblur="this.style.borderColor='rgba(0,240,255,0.15)'">
+          <div style="position:relative;">
+            <input id="login_pw" type="password" name="password" required autocomplete="current-password" placeholder="enter passphrase..."
+                   style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(0,240,255,0.15);border-radius:8px;padding:11px 42px 11px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color .2s;"
+                   onfocus="this.style.borderColor='rgba(0,240,255,0.5)'" onblur="this.style.borderColor='rgba(0,240,255,0.15)'">
+            <button type="button" onclick="(function(){ var i=document.getElementById('login_pw'); i.type=i.type==='password'?'text':'password'; this.textContent=i.type==='password'?'👁':'🔒'; }).call(this)"
+                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-muted);padding:2px 4px;line-height:1;">👁</button>
+          </div>
         </div>
 
         <button type="submit" class="btn btn-primary w-100" style="font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:3px;padding:13px;">

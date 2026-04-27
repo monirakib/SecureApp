@@ -54,18 +54,26 @@
         {# Password #}
         <div style="margin-bottom:16px;">
           <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:7px;">PASSPHRASE <span style="color:var(--text-muted);font-size:0.55rem;">· min 6 chars</span></label>
-          <input type="password" name="password" required minlength="6" autocomplete="new-password" placeholder="create passphrase..."
-                 style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(180,0,255,0.18);border-radius:8px;padding:11px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color .2s;"
-                 onfocus="this.style.borderColor='rgba(180,0,255,0.55)'" onblur="this.style.borderColor='rgba(180,0,255,0.18)'">
+          <div style="position:relative;">
+            <input id="reg_pw" type="password" name="password" required minlength="6" autocomplete="new-password" placeholder="create passphrase..."
+                   style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(180,0,255,0.18);border-radius:8px;padding:11px 42px 11px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color .2s;"
+                   onfocus="this.style.borderColor='rgba(180,0,255,0.55)'" onblur="this.style.borderColor='rgba(180,0,255,0.18)'">
+            <button type="button" onclick="(function(){ var i=document.getElementById('reg_pw'); i.type=i.type==='password'?'text':'password'; this.textContent=i.type==='password'?'👁':'🔒'; }).call(this)"
+                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-muted);padding:2px 4px;line-height:1;">👁</button>
+          </div>
         </div>
 
         {# Confirm #}
         <div style="margin-bottom:24px;">
           <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:7px;">CONFIRM PASSPHRASE</label>
-          <input type="password" name="confirm_password" required autocomplete="new-password" placeholder="repeat passphrase..."
-                 id="confirm_pw"
-                 style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(180,0,255,0.18);border-radius:8px;padding:11px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color .2s;"
-                 onfocus="this.style.borderColor='rgba(180,0,255,0.55)'" onblur="this.style.borderColor='rgba(180,0,255,0.18)'">
+          <div style="position:relative;">
+            <input type="password" name="confirm_password" required autocomplete="new-password" placeholder="repeat passphrase..."
+                   id="confirm_pw"
+                   style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(180,0,255,0.18);border-radius:8px;padding:11px 42px 11px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color .2s;"
+                   onfocus="this.style.borderColor='rgba(180,0,255,0.55)'" onblur="this.style.borderColor='rgba(180,0,255,0.18)'">
+            <button type="button" onclick="(function(){ var i=document.getElementById('confirm_pw'); i.type=i.type==='password'?'text':'password'; this.textContent=i.type==='password'?'👁':'🔒'; }).call(this)"
+                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-muted);padding:2px 4px;line-height:1;">👁</button>
+          </div>
           <div id="pw-match" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;margin-top:5px;height:14px;"></div>
         </div>
 
