@@ -100,6 +100,8 @@ def init_db():
             uploaded_by INTEGER,
             post_id INTEGER,
             tip_id INTEGER,
+            message_id INTEGER,
+            dead_drop_id INTEGER,
             data_hmac TEXT,
             created_at TEXT DEFAULT (datetime('now')),
             FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL,
