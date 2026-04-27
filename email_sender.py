@@ -51,8 +51,10 @@ def send_2fa_code(recipient_email, code):
     msg.attach(MIMEText(html_body, 'html'))
 
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as server:
+            server.ehlo()
             server.starttls()
+            server.ehlo()
             server.login(EMAIL_SENDER, EMAIL_APP_PASSWORD)
             server.sendmail(EMAIL_SENDER, recipient_email, msg.as_string())
         return True
