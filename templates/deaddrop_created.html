@@ -1,43 +1,50 @@
 {% extends "base.html" %}
-{% block title %}Dead Drop Created - SecureApp{% endblock %}
+{% block title %}Dead Drop Created — SecureApp{% endblock %}
 {% block content %}
-<div class="row justify-content-center" style="margin-top: 6vh;">
-    <div class="col-md-6 text-center">
-        <div class="float-in">
-            <div style="font-size: 4rem; margin-bottom: 1rem; filter: drop-shadow(0 0 20px rgba(0,240,255,0.4));">☠</div>
-        </div>
-        <div class="float-in float-in-delay-1">
-            <h2 class="section-title">DEAD DROP CREATED</h2>
-        </div>
-        <div class="float-in float-in-delay-2">
-            <div class="card neon-card">
-                <div class="card-body p-4">
-                    <p style="color: var(--text-secondary);">Your dead drop has been encrypted and stored. Share the access code below with the intended recipient.</p>
+<div style="min-height:75vh;display:flex;align-items:center;justify-content:center;padding:2rem 0;">
+  <div style="width:100%;max-width:500px;text-align:center;">
 
-                    <div style="padding: 1.5rem; background: rgba(255,0,102,0.05); border: 1px solid rgba(255,0,102,0.2); border-radius: 8px; margin: 1.5rem 0;">
-                        <div style="font-family: 'Orbitron', sans-serif; font-size: 0.65rem; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 0.5rem;">ACCESS CODE</div>
-                        <div id="access-code" style="font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; color: var(--pink); letter-spacing: 3px; cursor: pointer;"
-                             onclick="navigator.clipboard.writeText(this.textContent.trim()); this.style.color='var(--green)'; setTimeout(()=>this.style.color='var(--pink)', 1000);">
-                            {{ access_code }}
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">Click to copy</div>
-                    </div>
-
-                    <div style="padding: 1rem; background: rgba(0,240,255,0.05); border: 1px solid rgba(0,240,255,0.15); border-radius: 8px;">
-                        <div style="font-family: 'Orbitron', sans-serif; font-size: 0.65rem; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 0.3rem;">CODENAME</div>
-                        <div style="font-family: 'JetBrains Mono', monospace; color: var(--cyan);">{{ codename }}</div>
-                    </div>
-
-                    <div class="mt-3" style="padding: 0.8rem; background: rgba(255,221,0,0.05); border: 1px solid rgba(255,221,0,0.15); border-radius: 8px;">
-                        <small style="color: var(--yellow);">⚠ This code will NOT be shown again. The message will be destroyed after one read or after 24 hours.</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="float-in float-in-delay-3 mt-3">
-            <a href="{{ url_for('deaddrops.create_dead_drop') }}" class="btn btn-outline-primary">Create Another</a>
-            <a href="{{ url_for('deaddrops.dead_drops_page') }}" class="btn btn-outline-secondary">Back to Dead Drops</a>
-        </div>
+    <div class="float-in" style="margin-bottom:18px;">
+      <div style="font-size:3rem;filter:drop-shadow(0 0 24px rgba(255,0,102,0.5));line-height:1;">☠</div>
     </div>
+
+    <div class="float-in float-in-delay-1" style="margin-bottom:28px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:900;letter-spacing:4px;color:var(--pink);">// DEAD DROP CREATED</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);letter-spacing:2px;margin-top:8px;">encrypted · one-time read · self-destructs</div>
+    </div>
+
+    <div class="float-in float-in-delay-2" style="background:var(--glass-bg);border:1px solid rgba(255,0,102,0.18);border-top:2px solid var(--pink);border-radius:14px;padding:28px 30px;margin-bottom:20px;">
+
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-muted);margin-bottom:22px;">your dead drop has been encrypted and stored. share the access code below with the intended recipient.</div>
+
+      <div style="background:rgba(255,0,102,0.05);border:1px solid rgba(255,0,102,0.2);border-radius:10px;padding:20px;margin-bottom:16px;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px;">ACCESS CODE</div>
+        <div id="access-code"
+             style="font-family:'JetBrains Mono',monospace;font-size:1.9rem;color:var(--pink);letter-spacing:4px;cursor:pointer;transition:color .2s;"
+             onclick="navigator.clipboard.writeText(this.textContent.trim());this.style.color='var(--green)';setTimeout(()=>this.style.color='var(--pink)',1000);">{{ access_code }}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--text-muted);margin-top:8px;">click to copy</div>
+      </div>
+
+      <div style="background:rgba(0,240,255,0.04);border:1px solid rgba(0,240,255,0.12);border-radius:10px;padding:14px;margin-bottom:16px;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);margin-bottom:6px;">CODENAME</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:1rem;color:var(--cyan);">{{ codename }}</div>
+      </div>
+
+      <div style="background:rgba(255,221,0,0.05);border:1px solid rgba(255,221,0,0.15);border-radius:8px;padding:12px 16px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--yellow);line-height:1.6;">⚠ this code will NOT be shown again. the message will be destroyed after one read or after 24 hours.</div>
+      </div>
+
+    </div>
+
+    <div class="float-in float-in-delay-3" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <a href="{{ url_for('deaddrops.create_dead_drop') }}"
+         style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;padding:10px 22px;border:1px solid rgba(255,0,102,0.35);border-radius:6px;color:var(--pink);text-decoration:none;transition:background .2s;"
+         onmouseenter="this.style.background='rgba(255,0,102,0.1)'" onmouseleave="this.style.background='transparent'">CREATE ANOTHER</a>
+      <a href="{{ url_for('deaddrops.dead_drops_page') }}"
+         style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;padding:10px 22px;border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:var(--text-muted);text-decoration:none;transition:background .2s;"
+         onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">BACK TO DEAD DROPS</a>
+    </div>
+
+  </div>
 </div>
 {% endblock %}

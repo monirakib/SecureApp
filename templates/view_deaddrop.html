@@ -1,42 +1,57 @@
 {% extends "base.html" %}
-{% block title %}Dead Drop - SecureApp{% endblock %}
+{% block title %}Dead Drop — SecureApp{% endblock %}
 {% block content %}
-<div class="row justify-content-center" style="margin-top: 4vh;">
-    <div class="col-md-8">
-        <div class="text-center float-in">
-            <div style="font-size: 3rem; margin-bottom: 0.5rem; filter: drop-shadow(0 0 15px rgba(255,0,102,0.4));">☠</div>
-            <h2 class="section-title">DEAD DROP DECRYPTED</h2>
-            <p style="color: var(--pink); font-size: 0.8rem; letter-spacing: 1px;">THIS MESSAGE HAS BEEN PERMANENTLY DESTROYED</p>
-        </div>
-        <div class="card neon-card float-in float-in-delay-1" style="border-color: rgba(255,0,102,0.3) !important;">
-            <div class="card-body p-4">
-                <div class="encrypt-badge mb-3" style="color: var(--pink);"><span class="dot" style="background: var(--pink); box-shadow: 0 0 6px var(--pink);"></span> DECRYPTED · SELF-DESTRUCTED</div>
-                <h3 style="font-size: 1.2rem; letter-spacing: 1px; color: var(--text-primary);">{{ drop.title }}</h3>
-                <p style="color: var(--text-muted); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace;">
-                    <span style="color: var(--purple);">⬡ {{ drop.codename }}</span> &middot; {{ drop.created_at }}
-                </p>
-                <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
-                <div class="post-content">{{ drop.content | nl2br }}</div>
-                {% if attached_files %}
-                <div style="border-top: 1px solid rgba(255,0,102,0.2); margin-top: 1.2rem; padding-top: 1rem;">
-                    <div style="font-size:0.75rem;color:var(--pink);letter-spacing:1px;margin-bottom:0.6rem;">ATTACHMENTS — DOWNLOAD NOW (WILL NOT BE AVAILABLE AGAIN)</div>
-                    {% for f in attached_files %}
-                    <a href="data:application/octet-stream;base64,{{ f.data_b64 }}"
-                       download="{{ f.filename }}"
-                       class="btn btn-sm me-2 mb-1"
-                       style="border:1px solid var(--pink);color:var(--pink);font-family:'JetBrains Mono',monospace;font-size:0.8rem;">
-                        ⬇ {{ f.filename }}
-                        <span style="color:var(--text-muted);margin-left:4px;">({{ (f.size / 1024)|round(1) }} KB)</span>
-                    </a>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        <div class="text-center mt-3 float-in float-in-delay-2">
-            <p style="color: var(--text-muted); font-size: 0.8rem;">This message no longer exists in the system. If you need to reference it, save the contents now.</p>
-            <a href="{{ url_for('deaddrops.dead_drops_page') }}" class="btn btn-outline-secondary">← Dead Drops</a>
-        </div>
+<div style="max-width:700px;margin:4vh auto 0;">
+
+  {# header #}
+  <div class="float-in text-center" style="margin-bottom:28px;">
+    <div style="font-size:3rem;filter:drop-shadow(0 0 20px rgba(255,0,102,0.5));margin-bottom:12px;">☠</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:900;letter-spacing:4px;color:var(--pink);">// DEAD DROP DECRYPTED</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--pink);letter-spacing:2px;margin-top:6px;opacity:0.7;">THIS MESSAGE HAS BEEN PERMANENTLY DESTROYED</div>
+  </div>
+
+  {# content card #}
+  <div class="float-in float-in-delay-1" style="background:var(--glass-bg);border:1px solid rgba(255,0,102,0.2);border-top:2px solid var(--pink);border-radius:14px;padding:28px 30px;margin-bottom:18px;">
+
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+      <span style="width:6px;height:6px;background:var(--pink);border-radius:50%;display:inline-block;box-shadow:0 0 8px var(--pink);"></span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:1.5px;color:var(--pink);">DECRYPTED · SELF-DESTRUCTED</span>
     </div>
+
+    <div style="font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:700;color:var(--text-primary);margin-bottom:10px;">{{ drop.title }}</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);margin-bottom:20px;">
+      <span style="color:var(--purple);">⬡ {{ drop.codename }}</span> &nbsp;&middot;&nbsp; {{ drop.created_at }}
+    </div>
+
+    <div style="border-top:1px solid rgba(255,0,102,0.12);margin-bottom:20px;"></div>
+
+    <div style="font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--text-secondary);line-height:1.8;white-space:pre-wrap;">{{ drop.content | nl2br }}</div>
+
+    {% if attached_files %}
+    <div style="border-top:1px solid rgba(255,0,102,0.12);margin-top:22px;padding-top:18px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--pink);margin-bottom:10px;">ATTACHMENTS — DOWNLOAD NOW (WILL NOT BE AVAILABLE AGAIN)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        {% for f in attached_files %}
+        <a href="data:application/octet-stream;base64,{{ f.data_b64 }}"
+           download="{{ f.filename }}"
+           style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;padding:7px 14px;border:1px solid rgba(255,0,102,0.35);border-radius:5px;color:var(--pink);text-decoration:none;display:flex;align-items:center;gap:6px;transition:background .2s;"
+           onmouseenter="this.style.background='rgba(255,0,102,0.1)'" onmouseleave="this.style.background='transparent'">
+          ⬇ {{ f.filename }} <span style="color:var(--text-muted);">({{ (f.size / 1024)|round(1) }} KB)</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  {# footer #}
+  <div class="float-in float-in-delay-2 text-center">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">this message no longer exists in the system.<br>if you need to reference it, save the contents now.</div>
+    <a href="{{ url_for('deaddrops.dead_drops_page') }}"
+       style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:1.5px;padding:10px 22px;border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:var(--text-muted);text-decoration:none;transition:background .2s;"
+       onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">← DEAD DROPS</a>
+  </div>
+
 </div>
 {% endblock %}

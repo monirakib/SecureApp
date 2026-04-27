@@ -175,6 +175,11 @@ def _migrate_posts_table():
         "ALTER TABLE documents ADD COLUMN dead_drop_id INTEGER",
         "ALTER TABLE posts ADD COLUMN status TEXT DEFAULT 'new'",
         "ALTER TABLE messages ADD COLUMN expires_at TEXT",
+        "ALTER TABLE messages ADD COLUMN is_starred INTEGER DEFAULT 0",
+        "ALTER TABLE messages ADD COLUMN is_flagged INTEGER DEFAULT 0",
+        "ALTER TABLE messages ADD COLUMN is_vaulted INTEGER DEFAULT 0",
+        "ALTER TABLE messages ADD COLUMN sender_subject_enc TEXT DEFAULT ''",
+        "ALTER TABLE messages ADD COLUMN sender_content_enc TEXT DEFAULT ''",
     ]
     for sql in migrations:
         try:
@@ -217,6 +222,61 @@ def _migrate_posts_table():
     ''')
     conn.commit()
     conn.close()
+
+    # Create post_comments table if it doesn't exist
+    conn = get_db()
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS post_comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            post_id INTEGER NOT NULL,
+            user_id INTEGER,
+            commenter_codename TEXT DEFAULT '',
+            content_enc TEXT NOT NULL,
+            is_anonymous INTEGER DEFAULT 0,
+            data_hmac TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+
+def create_post_comment(post_id, user_id, content_enc, is_anonymous, commenter_codename, data_hmac):
+    """Save an encrypted comment on a post."""
+    conn = get_db()
+    conn.execute(
+        '''INSERT INTO post_comments
+           (post_id, user_id, content_enc, is_anonymous, commenter_codename, data_hmac)
+           VALUES (?, ?, ?, ?, ?, ?)''',
+        (post_id, user_id, content_enc, is_anonymous, commenter_codename, data_hmac)
+    )
+    conn.commit()
+    comment_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+    conn.close()
+    return comment_id
+
+
+def get_post_comments(post_id):
+    """Return all comments for a post ordered oldest-first."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT * FROM post_comments WHERE post_id = ? ORDER BY created_at ASC",
+        (post_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def count_post_comments(post_id):
+    conn = get_db()
+    count = conn.execute(
+        "SELECT COUNT(*) FROM post_comments WHERE post_id = ?", (post_id,)
+    ).fetchone()[0]
+    conn.close()
+    return count
+
 
 def create_user(username_hash, username_enc, email_hash, email_enc, phone_enc,
                 password_hash, password_salt, role, ecc_public_key, ecc_private_key_enc, data_hmac):
@@ -601,12 +661,15 @@ def count_documents():
 
 # ---- Message operations ----
 
-def create_message(sender_id, recipient_id, subject_enc, content_enc, sender_codename='', data_hmac='', expires_at=None):
+def create_message(sender_id, recipient_id, subject_enc, content_enc, sender_codename='', data_hmac='', expires_at=None,
+                   sender_subject_enc='', sender_content_enc=''):
     conn = get_db()
     conn.execute(
-        """INSERT INTO messages (sender_id, recipient_id, subject_enc, content_enc, sender_codename, data_hmac, expires_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (sender_id, recipient_id, subject_enc, content_enc, sender_codename, data_hmac, expires_at)
+        """INSERT INTO messages (sender_id, recipient_id, subject_enc, content_enc, sender_codename, data_hmac, expires_at,
+                                  sender_subject_enc, sender_content_enc)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (sender_id, recipient_id, subject_enc, content_enc, sender_codename, data_hmac, expires_at,
+         sender_subject_enc, sender_content_enc)
     )
     conn.commit()
     msg_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
@@ -665,6 +728,81 @@ def delete_message(msg_id):
     conn.execute("DELETE FROM messages WHERE id = ?", (msg_id,))
     conn.commit()
     conn.close()
+
+
+def toggle_message_flag(msg_id, field):
+    """Toggle is_starred, is_flagged, or is_vaulted. Returns new value."""
+    assert field in ('is_starred', 'is_flagged', 'is_vaulted')
+    conn = get_db()
+    current = conn.execute(f"SELECT {field} FROM messages WHERE id = ?", (msg_id,)).fetchone()
+    if not current:
+        conn.close()
+        return 0
+    new_val = 0 if current[0] else 1
+    conn.execute(f"UPDATE messages SET {field} = ? WHERE id = ?", (new_val, msg_id))
+    conn.commit()
+    conn.close()
+    return new_val
+
+
+def get_starred_messages(user_id):
+    conn = get_db()
+    msgs = conn.execute(
+        """SELECT * FROM messages WHERE recipient_id = ? AND is_starred = 1
+           AND (expires_at IS NULL OR expires_at > datetime('now'))
+           ORDER BY created_at DESC""", (user_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(m) for m in msgs]
+
+
+def get_flagged_messages(user_id):
+    conn = get_db()
+    msgs = conn.execute(
+        """SELECT * FROM messages WHERE recipient_id = ? AND is_flagged = 1
+           AND (expires_at IS NULL OR expires_at > datetime('now'))
+           ORDER BY created_at DESC""", (user_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(m) for m in msgs]
+
+
+def get_vaulted_messages(user_id):
+    conn = get_db()
+    msgs = conn.execute(
+        """SELECT * FROM messages WHERE recipient_id = ? AND is_vaulted = 1
+           AND (expires_at IS NULL OR expires_at > datetime('now'))
+           ORDER BY created_at DESC""", (user_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(m) for m in msgs]
+
+
+def count_starred_messages(user_id):
+    conn = get_db()
+    c = conn.execute(
+        "SELECT COUNT(*) FROM messages WHERE recipient_id = ? AND is_starred = 1", (user_id,)
+    ).fetchone()[0]
+    conn.close()
+    return c
+
+
+def count_flagged_messages(user_id):
+    conn = get_db()
+    c = conn.execute(
+        "SELECT COUNT(*) FROM messages WHERE recipient_id = ? AND is_flagged = 1", (user_id,)
+    ).fetchone()[0]
+    conn.close()
+    return c
+
+
+def count_vaulted_messages(user_id):
+    conn = get_db()
+    c = conn.execute(
+        "SELECT COUNT(*) FROM messages WHERE recipient_id = ? AND is_vaulted = 1", (user_id,)
+    ).fetchone()[0]
+    conn.close()
+    return c
 
 
 def update_post_status(post_id, status):

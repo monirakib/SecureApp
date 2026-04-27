@@ -1,99 +1,120 @@
 {% extends "base.html" %}
-{% block title %}Key Management - SecureApp{% endblock %}
+{% block title %}Key Management — SecureApp{% endblock %}
 {% block content %}
-<h2 class="section-title float-in">KEY MANAGEMENT</h2>
+<div style="max-width:1100px;margin:0 auto;padding:0.5rem 0 2rem;">
 
-<div class="row">
-    <div class="col-md-6 float-in float-in-delay-1">
-        <div class="card neon-card mb-4">
-            <div class="card-header">SYSTEM RSA KEYS</div>
-            <div class="card-body">
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">RSA keys encrypt user profile data and ECC private keys.</p>
-                <p style="font-size: 0.82rem; color: var(--text-muted);">
-                    Rotation will generate new RSA keys and re-encrypt all {{ user_count }} user records.
-                </p>
-                <form method="POST" action="{{ url_for('admin.rotate_rsa_keys') }}"
-                      onsubmit="return confirm('This will re-encrypt ALL user data. Proceed?')">
-                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                    <button type="submit" class="btn btn-warning">
-                        ⟳ ROTATE RSA KEYS
-                    </button>
-                </form>
-            </div>
-        </div>
+  {# ── HEADER ── #}
+  <div class="float-in d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:1.85rem;font-weight:900;letter-spacing:3px;color:var(--yellow);text-shadow:0 0 28px rgba(255,221,0,0.3);line-height:1.1;">
+        <span style="opacity:0.6;">// </span>KEY MANAGEMENT
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);letter-spacing:1px;margin-top:5px;">
+        cryptographic key operations &nbsp;·&nbsp; {{ user_count }} user records
+      </div>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;padding:9px 18px;border:1px solid rgba(0,240,255,0.25);border-radius:8px;color:var(--text-muted);text-decoration:none;transition:all .2s;"
+       onmouseover="this.style.borderColor='rgba(0,240,255,0.6)';this.style.color='var(--cyan)'" onmouseout="this.style.borderColor='rgba(0,240,255,0.25)';this.style.color='var(--text-muted)'">
+      ← COMMAND CENTER
+    </a>
+  </div>
 
-        <div class="card mb-4">
-            <div class="card-header">HMAC KEYS</div>
-            <div class="card-body">
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">HMAC keys are used for data integrity verification on posts, messages, and user records.</p>
-                <p style="font-size: 0.82rem; color: var(--text-muted);">
-                    After rotation, existing HMAC signatures will not match until data is re-written. New data will use the new keys automatically.
-                </p>
-                <form method="POST" action="{{ url_for('admin.rotate_hmac_keys') }}"
-                      onsubmit="return confirm('HMAC rotation will invalidate existing integrity checks. Proceed?')">
-                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                    <button type="submit" class="btn btn-outline-warning">
-                        ⟳ ROTATE HMAC KEYS
-                    </button>
-                </form>
-            </div>
-        </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
 
-        <div class="card">
-            <div class="card-header">ENCRYPTION OVERVIEW</div>
-            <div class="card-body">
-                <table class="table table-sm mb-0">
-                    <tr>
-                        <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">USER DATA</td>
-                        <td><span class="data-chip">RSA-1024</span></td>
-                    </tr>
-                    <tr>
-                        <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">POSTS</td>
-                        <td><span class="data-chip">ECC ElGamal (secp256k1)</span></td>
-                    </tr>
-                    <tr>
-                        <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">MESSAGES</td>
-                        <td><span class="data-chip">ECC ElGamal (E2E)</span></td>
-                    </tr>
-                    <tr>
-                        <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">PASSWORDS</td>
-                        <td><span class="data-chip">SHA-256 + salt</span></td>
-                    </tr>
-                    <tr>
-                        <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">INTEGRITY</td>
-                        <td><span class="data-chip">HMAC-SHA256</span></td>
-                    </tr>
-                    <tr>
-                        <td style="color: var(--text-muted); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 1px;">SESSIONS</td>
-                        <td><span class="data-chip">HMAC-signed tokens</span></td>
-                    </tr>
-                </table>
-            </div>
+    {# ── LEFT COLUMN ── #}
+    <div>
+
+      {# RSA KEY ROTATION #}
+      <div class="float-in float-in-delay-1" style="background:var(--glass-bg);border:1px solid rgba(255,221,0,0.2);border-top:2px solid var(--yellow);border-radius:12px;padding:22px;margin-bottom:18px;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:3px;color:var(--yellow);margin-bottom:10px;">⚿ SYSTEM RSA KEYS</div>
+        <p style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:var(--text-secondary);margin-bottom:8px;">RSA keys encrypt user profile data and ECC private keys.</p>
+        <p style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);margin-bottom:16px;">
+          Rotation generates new RSA keys and re-encrypts all {{ user_count }} user records. <span style="color:var(--red);">Destructive operation.</span>
+        </p>
+        <form method="POST" action="{{ url_for('admin.rotate_rsa_keys') }}"
+              onsubmit="return confirm('This will re-encrypt ALL user data. Proceed?')">
+          <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+          <button type="submit"
+                  style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;padding:10px 22px;border-radius:8px;background:rgba(255,221,0,0.1);border:1px solid rgba(255,221,0,0.4);color:var(--yellow);cursor:pointer;transition:all .2s;"
+                  onmouseover="this.style.background='rgba(255,221,0,0.2)'" onmouseout="this.style.background='rgba(255,221,0,0.1)'">
+            ⟳ ROTATE RSA KEYS
+          </button>
+        </form>
+      </div>
+
+      {# HMAC KEY ROTATION #}
+      <div class="float-in float-in-delay-2" style="background:var(--glass-bg);border:1px solid rgba(0,255,136,0.15);border-top:2px solid var(--green);border-radius:12px;padding:22px;margin-bottom:18px;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:3px;color:var(--green);margin-bottom:10px;">⬡ HMAC KEYS</div>
+        <p style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:var(--text-secondary);margin-bottom:8px;">HMAC keys verify data integrity on posts, messages, and user records.</p>
+        <p style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);margin-bottom:16px;">
+          After rotation, existing HMAC signatures will not match until data is re-written. New data uses new keys automatically.
+        </p>
+        <form method="POST" action="{{ url_for('admin.rotate_hmac_keys') }}"
+              onsubmit="return confirm('HMAC rotation will invalidate existing integrity checks. Proceed?')">
+          <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+          <button type="submit"
+                  style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;padding:10px 22px;border-radius:8px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3);color:var(--green);cursor:pointer;transition:all .2s;"
+                  onmouseover="this.style.background='rgba(0,255,136,0.18)'" onmouseout="this.style.background='rgba(0,255,136,0.08)'">
+            ⟳ ROTATE HMAC KEYS
+          </button>
+        </form>
+      </div>
+
+      {# ENCRYPTION OVERVIEW #}
+      <div class="float-in float-in-delay-3" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;overflow:hidden;">
+        <div style="padding:14px 20px;border-bottom:1px solid rgba(0,240,255,0.1);background:rgba(0,240,255,0.04);">
+          <span style="font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:2px;color:var(--cyan);">ENCRYPTION OVERVIEW</span>
         </div>
+        {% for label, algo, color in [
+            ('USER DATA',   'RSA-1024',                  'var(--yellow)'),
+            ('POSTS',       'ECC ElGamal · secp256k1',   'var(--cyan)'),
+            ('MESSAGES',    'ECC ElGamal · E2E',         'var(--cyan)'),
+            ('PASSWORDS',   'SHA-256 + salt',            'var(--green)'),
+            ('INTEGRITY',   'HMAC-SHA256',               'var(--green)'),
+            ('SESSIONS',    'HMAC-signed tokens',        'var(--purple)')
+        ] %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.03);">
+          <span style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);">{{ label }}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:{{ color }};">{{ algo }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
     </div>
 
-    <div class="col-md-6 float-in float-in-delay-2">
-        <div class="card">
-            <div class="card-header">KEY ROTATION HISTORY</div>
-            <div class="card-body">
-                {% if rotation_log %}
-                <table class="table table-sm">
-                    <thead><tr><th>Type</th><th>Date</th><th>By</th></tr></thead>
-                    <tbody>
-                    {% for log in rotation_log %}
-                    <tr>
-                        <td><span class="data-chip">{{ log.key_type }}</span></td>
-                        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-muted);">{{ log.rotated_at }}</td>
-                        <td><span class="data-chip">{{ log.rotated_by }}</span></td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p style="color: var(--text-muted);" class="mb-0">No key rotations performed yet.</p>
-                {% endif %}
-            </div>
-        </div>
+    {# ── RIGHT COLUMN — KEY ROTATION HISTORY ── #}
+    <div class="float-in float-in-delay-2" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;overflow:hidden;">
+      <div style="padding:14px 20px;border-bottom:1px solid rgba(0,240,255,0.1);background:rgba(0,240,255,0.04);">
+        <span style="font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:2px;color:var(--cyan);">KEY ROTATION HISTORY</span>
+      </div>
+
+      {% if rotation_log %}
+
+      {# History header #}
+      <div style="display:grid;grid-template-columns:1fr 1fr 80px;padding:10px 20px;border-bottom:1px solid rgba(0,240,255,0.08);background:rgba(0,0,0,0.2);">
+        {% for col in ['TYPE','DATE','BY'] %}
+        <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:2px;color:var(--text-muted);">{{ col }}</span>
+        {% endfor %}
+      </div>
+
+      {% for log in rotation_log %}
+      <div style="display:grid;grid-template-columns:1fr 1fr 80px;padding:13px 20px;border-bottom:1px solid rgba(255,255,255,0.03);align-items:center;transition:background .15s;"
+           onmouseover="this.style.background='rgba(0,240,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <span style="font-family:'Orbitron',sans-serif;font-size:0.62rem;letter-spacing:1.5px;padding:3px 9px;border-radius:4px;background:rgba(255,221,0,0.1);border:1px solid rgba(255,221,0,0.2);color:var(--yellow);width:fit-content;">{{ log.key_type }}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);">{{ log.rotated_at[:16] }}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-secondary);">#{{ log.rotated_by }}</span>
+      </div>
+      {% endfor %}
+
+      {% else %}
+      <div style="padding:50px 20px;text-align:center;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;color:var(--text-muted);">NO ROTATIONS YET</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text-muted);margin-top:8px;">All keys are using their original values.</div>
+      </div>
+      {% endif %}
     </div>
+
+  </div>
+
 </div>
 {% endblock %}

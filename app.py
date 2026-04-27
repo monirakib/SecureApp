@@ -131,8 +131,6 @@ def create_app():
     # Root route
     @app.route('/')
     def index():
-        if g.user:
-            return redirect(url_for('feed.public_feed'))
         return render_template('index.html')
 
     # Error handlers

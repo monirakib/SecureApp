@@ -1,39 +1,62 @@
 {% extends "base.html" %}
-{% block title %}Create Dead Drop - SecureApp{% endblock %}
+{% block title %}Create Dead Drop — SecureApp{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <h2 class="section-title float-in">CREATE DEAD DROP</h2>
-        <div class="card neon-card float-in float-in-delay-1">
-            <div class="card-body p-4">
-                <form method="POST" action="{{ url_for('deaddrops.create_dead_drop') }}" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="codename" class="form-label">Your Codename (optional)</label>
-                        <input type="text" class="form-control" id="codename" name="codename"
-                               placeholder="Leave blank for auto-generated codename">
-                    </div>
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="title" name="title"
-                               placeholder="Dead Drop" maxlength="200">
-                    </div>
-                    <div class="mb-3">
-                        <label for="content" class="form-label">Secret Message</label>
-                        <textarea class="form-control" id="content" name="content"
-                                  rows="6" required placeholder="This message will self-destruct after being read once..."></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="document" class="form-label">Attachment <span style="color:var(--text-muted);font-size:0.8rem;">(optional, max 2 MB — also self-destructs)</span></label>
-                        <input type="file" class="form-control" id="document" name="document">
-                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;">File is RSA-encrypted and deleted permanently when the drop is accessed</div>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">⬡ CREATE DEAD DROP</button>
-                </form>
-            </div>
-        </div>
-        <div class="mt-3 float-in float-in-delay-2">
-            <a href="{{ url_for('deaddrops.dead_drops_page') }}" class="btn btn-outline-secondary">← Back</a>
-        </div>
-    </div>
+<div style="max-width:580px;margin:0 auto;">
+
+  <div class="float-in" style="margin-bottom:28px;">
+    <div style="font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:900;letter-spacing:4px;color:var(--pink);">// CREATE DEAD DROP</div>
+    <div style="width:48px;height:2px;background:linear-gradient(90deg,var(--pink),var(--purple));margin-top:6px;border-radius:2px;"></div>
+  </div>
+
+  <div class="float-in float-in-delay-1" style="background:var(--glass-bg);border:1px solid rgba(255,0,102,0.18);border-top:2px solid var(--pink);border-radius:14px;padding:28px 30px;margin-bottom:16px;">
+
+    <form method="POST" action="{{ url_for('deaddrops.create_dead_drop') }}" enctype="multipart/form-data">
+
+      {# Codename #}
+      <div style="margin-bottom:18px;">
+        <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:7px;">CODENAME <span style="font-size:0.55rem;">· optional, auto-generated if blank</span></label>
+        <input type="text" name="codename" placeholder="leave blank for auto-generated codename"
+               style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(255,0,102,0.15);border-radius:8px;padding:10px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.85rem;outline:none;transition:border-color .2s;"
+               onfocus="this.style.borderColor='rgba(255,0,102,0.45)'" onblur="this.style.borderColor='rgba(255,0,102,0.15)'">
+      </div>
+
+      {# Title #}
+      <div style="margin-bottom:18px;">
+        <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:7px;">TITLE</label>
+        <input type="text" name="title" placeholder="Dead Drop" maxlength="200"
+               style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(255,0,102,0.15);border-radius:8px;padding:10px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.85rem;outline:none;transition:border-color .2s;"
+               onfocus="this.style.borderColor='rgba(255,0,102,0.45)'" onblur="this.style.borderColor='rgba(255,0,102,0.15)'">
+      </div>
+
+      {# Message #}
+      <div style="margin-bottom:18px;">
+        <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:7px;">SECRET MESSAGE</label>
+        <textarea name="content" rows="6" required placeholder="this message will self-destruct after being read once..."
+                  style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(255,0,102,0.15);border-radius:8px;padding:10px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.85rem;outline:none;resize:vertical;transition:border-color .2s;"
+                  onfocus="this.style.borderColor='rgba(255,0,102,0.45)'" onblur="this.style.borderColor='rgba(255,0,102,0.15)'"></textarea>
+      </div>
+
+      {# Attachment #}
+      <div style="margin-bottom:26px;">
+        <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:7px;">ATTACHMENT <span style="font-size:0.55rem;">· optional · max 2 MB · also self-destructs</span></label>
+        <input type="file" name="document"
+               style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(255,0,102,0.15);border-radius:8px;padding:9px 14px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:0.8rem;outline:none;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--text-muted);margin-top:5px;">file is RSA-encrypted and deleted permanently when the drop is accessed</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100"
+              style="font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:3px;padding:13px;background:linear-gradient(135deg,rgba(255,0,102,0.25),rgba(180,0,255,0.15));border-color:rgba(255,0,102,0.5);">
+        ⬡ CREATE DEAD DROP
+      </button>
+    </form>
+
+  </div>
+
+  <div class="float-in float-in-delay-2">
+    <a href="{{ url_for('deaddrops.dead_drops_page') }}"
+       style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:1.5px;padding:8px 18px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;color:var(--text-muted);text-decoration:none;transition:background .2s;"
+       onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">← BACK</a>
+  </div>
+
 </div>
 {% endblock %}

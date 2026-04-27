@@ -18,24 +18,38 @@ messages_bp = Blueprint('messages', __name__)
 @messages_bp.route('/messages')
 @login_required
 def inbox():
-    """View message inbox."""
-    msgs = db.get_inbox(g.user['id'])
-    decrypted_msgs = []
+    """View message inbox with optional view filter."""
+    view = request.args.get('view', 'inbox')  # inbox | starred | flagged | vault
 
-    for msg in msgs:
+    uid = g.user['id']
+    if view == 'starred':
+        raw_msgs = db.get_starred_messages(uid)
+    elif view == 'flagged':
+        raw_msgs = db.get_flagged_messages(uid)
+    elif view == 'vault':
+        raw_msgs = db.get_vaulted_messages(uid)
+    else:
+        raw_msgs = db.get_inbox(uid)
+
+    # Pre-fetch current user for ECC decryption (reuse for all messages)
+    me = db.get_user_by_id(uid)
+    ecc_priv = None
+    try:
+        ecc_priv = key_manager.decrypt_user_ecc_private_key(me['ecc_private_key_enc'])
+    except Exception:
+        pass
+
+    decrypted_msgs = []
+    for msg in raw_msgs:
         try:
             s_enc = msg['subject_enc']
-            if s_enc.startswith('ECC:'):
-                # Decrypt ECC subject with recipient's (current user's) ECC key
-                me = db.get_user_by_id(g.user['id'])
-                priv = key_manager.decrypt_user_ecc_private_key(me['ecc_private_key_enc'])
-                subject = ecc_decrypt_string(s_enc[4:], priv)
+            if s_enc.startswith('ECC:') and ecc_priv:
+                subject = ecc_decrypt_string(s_enc[4:], ecc_priv)
             else:
                 subject = key_manager.decrypt_user_data(s_enc)
         except Exception:
             subject = '[Decryption Error]'
 
-        # Get sender name
         if msg['sender_id']:
             sender = db.get_user_by_id(msg['sender_id'])
             if sender:
@@ -53,11 +67,26 @@ def inbox():
             'subject': subject,
             'sender_name': sender_name,
             'is_read': msg['is_read'],
-            'created_at': msg['created_at']
+            'is_starred': msg.get('is_starred', 0),
+            'is_flagged': msg.get('is_flagged', 0),
+            'is_vaulted': msg.get('is_vaulted', 0),
+            'created_at': msg['created_at'],
         })
 
-    unread_count = db.count_unread_messages(g.user['id'])
-    return render_template('messages_inbox.html', messages=decrypted_msgs, unread_count=unread_count)
+    unread_count = db.count_unread_messages(uid)
+    starred_count = db.count_starred_messages(uid)
+    flagged_count = db.count_flagged_messages(uid)
+    vaulted_count = db.count_vaulted_messages(uid)
+    inbox_count = len(db.get_inbox(uid))
+
+    return render_template('messages_inbox.html',
+                           messages=decrypted_msgs,
+                           unread_count=unread_count,
+                           starred_count=starred_count,
+                           flagged_count=flagged_count,
+                           vaulted_count=vaulted_count,
+                           inbox_count=inbox_count,
+                           view=view)
 
 
 @messages_bp.route('/messages/sent')
@@ -65,16 +94,27 @@ def inbox():
 def sent():
     """View sent messages."""
     msgs = db.get_sent_messages(g.user['id'])
+
+    # Pre-fetch sender's ECC private key once for all decryptions
+    me = db.get_user_by_id(g.user['id'])
+    ecc_priv = None
+    try:
+        ecc_priv = key_manager.decrypt_user_ecc_private_key(me['ecc_private_key_enc'])
+    except Exception:
+        pass
+
     decrypted_msgs = []
 
     for msg in msgs:
+        # Prefer the sender copy (encrypted with sender's own key)
         try:
-            s_enc = msg['subject_enc']
-            if s_enc.startswith('ECC:'):
-                # Sender cannot decrypt ECC-encrypted subjects (true E2E: only recipient can)
+            ss_enc = msg.get('sender_subject_enc', '')
+            if ss_enc and ss_enc.startswith('ECC:') and ecc_priv:
+                subject = ecc_decrypt_string(ss_enc[4:], ecc_priv)
+            elif msg['subject_enc'].startswith('ECC:'):
                 subject = '[E2E Encrypted]'
             else:
-                subject = key_manager.decrypt_user_data(s_enc)
+                subject = key_manager.decrypt_user_data(msg['subject_enc'])
         except Exception:
             subject = '[Decryption Error]'
 
@@ -95,6 +135,30 @@ def sent():
         })
 
     return render_template('messages_sent.html', messages=decrypted_msgs)
+
+
+@messages_bp.route('/messages/<int:msg_id>/toggle/<action>', methods=['POST'])
+@login_required
+def toggle_message_action(msg_id, action):
+    """Toggle starred / flagged / vaulted on a received message."""
+    csrf = request.form.get('csrf_token', '')
+    if csrf != g.csrf_token:
+        abort(403)
+
+    field_map = {'star': 'is_starred', 'flag': 'is_flagged', 'vault': 'is_vaulted'}
+    field = field_map.get(action)
+    if not field:
+        abort(400)
+
+    msg = db.get_message_by_id(msg_id)
+    if not msg or msg['recipient_id'] != g.user['id']:
+        abort(403)
+
+    db.toggle_message_flag(msg_id, field)
+
+    # Return to the view the user came from
+    return_view = request.form.get('return_view', 'inbox')
+    return redirect(url_for('messages.inbox', view=return_view))
 
 
 @messages_bp.route('/messages/compose', methods=['GET', 'POST'])
@@ -149,6 +213,18 @@ def compose():
             subject_enc = key_manager.encrypt_user_data(subject)
             content_enc = key_manager.encrypt_user_data(content)
 
+        # Encrypt to self — sender copy so the sender can read their own sent messages
+        # (standard "encrypt-to-self" pattern, equivalent to OpenPGP's --encrypt-to)
+        sender_subject_enc = ''
+        sender_content_enc = ''
+        try:
+            me_row = db.get_user_by_id(g.user['id'])
+            me_pub = deserialize_ecc_public_key(me_row['ecc_public_key'])
+            sender_subject_enc = 'ECC:' + ecc_encrypt_string(subject, me_pub)
+            sender_content_enc = 'ECC:' + ecc_encrypt_string(content, me_pub)
+        except Exception:
+            pass  # If this fails the message is still delivered; sender just cannot decrypt it
+
         from codenames import generate_codename
         sender_codename = generate_codename() if anonymous else ''
 
@@ -167,7 +243,9 @@ def compose():
             content_enc=content_enc,
             sender_codename=sender_codename,
             data_hmac=data_hmac,
-            expires_at=expires_at
+            expires_at=expires_at,
+            sender_subject_enc=sender_subject_enc,
+            sender_content_enc=sender_content_enc
         )
 
         # Handle optional file attachment
@@ -211,9 +289,18 @@ def view_message(msg_id):
                 subject = ecc_decrypt_string(s_enc[4:] if s_enc.startswith('ECC:') else s_enc, priv)
                 content = ecc_decrypt_string(c_enc[4:] if c_enc.startswith('ECC:') else c_enc, priv)
             else:
-                # Sender viewing their sent item — cannot decrypt ECC-encrypted content
-                subject = '[E2E Encrypted — Only recipient can read]'
-                content = 'This message was encrypted with the recipient\'s ECC public key (secp256k1 ElGamal).\nOnly the intended recipient can decrypt it.'
+                # Sender viewing their sent item — decrypt using the sender copy (encrypt-to-self)
+                ss_enc = msg.get('sender_subject_enc', '')
+                sc_enc = msg.get('sender_content_enc', '')
+                if ss_enc and sc_enc:
+                    me = db.get_user_by_id(g.user['id'])
+                    priv = key_manager.decrypt_user_ecc_private_key(me['ecc_private_key_enc'])
+                    subject = ecc_decrypt_string(ss_enc[4:] if ss_enc.startswith('ECC:') else ss_enc, priv)
+                    content = ecc_decrypt_string(sc_enc[4:] if sc_enc.startswith('ECC:') else sc_enc, priv)
+                else:
+                    # Legacy message — no sender copy was stored
+                    subject = '[E2E Encrypted — Sent before self-copy feature]'
+                    content = 'This message was sent before the encrypt-to-self feature was enabled.\nOnly the recipient can decrypt it.'
         else:
             subject = key_manager.decrypt_user_data(s_enc)
             content = key_manager.decrypt_user_data(c_enc)

@@ -19,82 +19,94 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
+                    {# ── CENTER NAV LINKS ── #}
+                    <ul class="navbar-nav mx-auto" style="white-space:nowrap;flex-wrap:nowrap;">
                         {% if g.user %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('feed.public_feed') }}">⬡ Feed</a>
+                            <a class="nav-link{% if request.endpoint == 'feed.public_feed' %} active{% endif %}" href="{{ url_for('feed.public_feed') }}">FEED</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('posts.my_posts') }}">◈ My Reports</a>
+                            <a class="nav-link{% if request.endpoint == 'posts.create_post' %} active{% endif %}" href="{{ url_for('posts.create_post') }}">CREATE</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('posts.create_post') }}">+ Report</a>
+                            <a class="nav-link{% if request.endpoint == 'posts.my_posts' %} active{% endif %}" href="{{ url_for('posts.my_posts') }}">MY REPORTS</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('messages.inbox') }}">
-                                ✉ Messages
-                                {% if g.unread_count %}<span class="badge bg-danger" style="font-size: 0.6rem;">{{ g.unread_count }}</span>{% endif %}
-                            </a>
+                            <a class="nav-link{% if request.endpoint in ['messages.inbox','messages.view_message'] %} active{% endif %}" href="{{ url_for('messages.inbox') }}">INBOX</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('friends.friends_page') }}">
-                                ◈ Friends
-                                {% if g.pending_friend_requests %}<span class="badge bg-warning text-dark" style="font-size: 0.6rem;">{{ g.pending_friend_requests }}</span>{% endif %}
-                            </a>
+                            <a class="nav-link{% if request.endpoint == 'messages.compose' %} active{% endif %}" href="{{ url_for('messages.compose') }}">COMPOSE</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('deaddrops.dead_drops_page') }}">☠ Dead Drops</a>
+                            <a class="nav-link{% if request.endpoint == 'tips.submit_tip' %} active{% endif %}" href="{{ url_for('tips.submit_tip') }}">SUBMIT TIP</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('profile.view_profile') }}">◉ Profile</a>
+                            <a class="nav-link{% if request.endpoint and request.endpoint.startswith('deaddrops.') %} active{% endif %}" href="{{ url_for('deaddrops.dead_drops_page') }}">DEAD DROPS</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('sessions.my_sessions') }}" title="Manage active sessions">⊞ Sessions</a>
+                            <a class="nav-link{% if request.endpoint in ['profile.view_profile','profile.edit_profile'] %} active{% endif %}" href="{{ url_for('profile.view_profile') }}">PROFILE</a>
                         </li>
                         {% if g.user.role == 'admin' %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                ⚙ Admin
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">◉ Dashboard</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.manage_users') }}">◎ Users</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.manage_posts') }}">◈ All Reports</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('tips.manage_tips') }}">⚑ Anonymous Tips</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.key_management_page') }}">⚿ Keys</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.audit_log') }}">⏱ Audit Log</a></li>
-                            </ul>
+                        <li class="nav-item">
+                            <a class="nav-link{% if request.endpoint and request.endpoint.startswith('admin.') %} active{% endif %}" href="{{ url_for('admin.dashboard') }}">ADMIN</a>
                         </li>
                         {% endif %}
                         {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('tips.submit_tip') }}">⚑ Submit Tip</a>
+                            <a class="nav-link{% if request.endpoint == 'tips.submit_tip' %} active{% endif %}" href="{{ url_for('tips.submit_tip') }}">SUBMIT TIP</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('deaddrops.dead_drops_page') }}">☠ Dead Drops</a>
+                            <a class="nav-link{% if request.endpoint == 'deaddrops.dead_drops_page' %} active{% endif %}" href="{{ url_for('deaddrops.dead_drops_page') }}">DEAD DROPS</a>
                         </li>
                         {% endif %}
                     </ul>
-                    <ul class="navbar-nav">
+
+                    {# ── RIGHT SIDE: BELL + AUTH ── #}
+                    <div class="d-flex align-items-center gap-2">
                         {% if g.user %}
-                        <li class="nav-item">
-                            <span class="nav-link" style="color: var(--cyan) !important;">
-                                {{ g.user_display_name }}
-                                {% if g.user.role == 'admin' %}<span class="badge bg-warning">Admin</span>{% endif %}
-                            </span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.logout') }}" style="color: var(--pink) !important;">⏻ Logout</a>
-                        </li>
+                        {# Notification Bell #}
+                        {% set notif_total = (g.unread_count or 0) + (g.pending_friend_requests or 0) %}
+                        <div class="dropdown">
+                            <button class="notif-bell-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="notifBell"
+                                    {% if notif_total > 0 %}onclick="this.classList.add('notif-bell-ring');setTimeout(()=>this.classList.remove('notif-bell-ring'),600)"{% endif %}>
+                                <svg class="bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                                {% if notif_total > 0 %}<span class="notif-bell-count">{{ notif_total if notif_total < 10 else '9+' }}</span>{% endif %}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end notif-dropdown" aria-labelledby="notifBell">
+                                <li><h6 class="dropdown-header">NOTIFICATIONS</h6></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('messages.inbox') }}">
+                                        <span>✉</span>
+                                        <span>Messages</span>
+                                        {% if g.unread_count %}<span class="badge bg-danger ms-auto">{{ g.unread_count }}</span>{% else %}<span style="color:var(--text-muted);font-size:0.7rem;margin-left:auto;">none</span>{% endif %}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('friends.friends_page') }}">
+                                        <span>◈</span>
+                                        <span>Friend Requests</span>
+                                        {% if g.pending_friend_requests %}<span class="badge bg-warning text-dark ms-auto">{{ g.pending_friend_requests }}</span>{% else %}<span style="color:var(--text-muted);font-size:0.7rem;margin-left:auto;">none</span>{% endif %}
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('messages.compose') }}" style="color:var(--cyan)!important;">
+                                        <span>+</span><span>Compose Message</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        {# Username chip #}
+                        <span class="nav-username">{{ g.user_display_name }}{% if g.user.role == 'admin' %} <span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;background:rgba(255,221,0,0.2);color:#ffdd00;border:1px solid rgba(255,221,0,0.4);border-radius:3px;padding:1px 5px;letter-spacing:1px;vertical-align:middle;">ADMIN</span>{% endif %}</span>
+                        <a href="{{ url_for('auth.logout') }}" class="btn-nav-logout">LOGOUT</a>
                         {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
-                        </li>
+                        {# Plain bell #}
+                        <span class="nav-bell-plain"><svg class="bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+                        <a href="{{ url_for('auth.login') }}" class="btn-nav-login">LOGIN</a>
+                        <a href="{{ url_for('auth.register') }}" class="btn-nav-signup">SIGN UP</a>
                         {% endif %}
-                    </ul>
+                    </div>
+                </div>
                 </div>
             </div>
         </nav>

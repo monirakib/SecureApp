@@ -54,7 +54,7 @@ def _mask_email(email):
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if g.user:
-        return redirect(url_for('posts.my_posts'))
+        return redirect(url_for('feed.public_feed'))
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -136,7 +136,7 @@ def register():
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if g.user:
-        return redirect(url_for('posts.my_posts'))
+        return redirect(url_for('feed.public_feed'))
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -259,7 +259,7 @@ def verify_2fa():
     # Create real session
     session_cookie = _create_session_cookie(user_id)
 
-    response = make_response(redirect(url_for('posts.my_posts')))
+    response = make_response(redirect(url_for('feed.public_feed')))
     response.set_cookie(
         'session_token',
         session_cookie,

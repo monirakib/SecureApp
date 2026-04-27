@@ -1,55 +1,106 @@
 {% extends "base.html" %}
-{% block title %}Register - SecureApp{% endblock %}
+{% block title %}Create Account — SecureApp{% endblock %}
 {% block content %}
-<div class="row justify-content-center" style="margin-top: 4vh;">
-    <div class="col-md-6 col-lg-5">
-        <div class="text-center mb-4 float-in">
-            <h2 class="section-title" style="display: inline-block;">CREATE ACCOUNT</h2>
-            <p style="color: var(--text-muted); font-size: 0.85rem; letter-spacing: 1px;">INITIALIZE NEW IDENTITY</p>
-        </div>
-        <div class="card neon-card scan-line float-in float-in-delay-1">
-            <div class="card-body p-4">
-                <form method="POST" action="{{ url_for('auth.register') }}">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username"
-                               required minlength="3" maxlength="50" autocomplete="username" placeholder="Choose a handle">
-                        <div class="form-text">3-50 characters</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email"
-                               required autocomplete="email" placeholder="your@email.com">
-                    </div>
-                    <div class="mb-3">
-                        <label for="phone" class="form-label">Phone (optional)</label>
-                        <input type="tel" class="form-control" id="phone" name="phone"
-                               autocomplete="tel" placeholder="+1 (555) 000-0000">
-                    </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password"
-                               required minlength="6" autocomplete="new-password" placeholder="Min 6 characters">
-                    </div>
-                    <div class="mb-3">
-                        <label for="confirm_password" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="confirm_password"
-                               name="confirm_password" required autocomplete="new-password" placeholder="Repeat password">
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">⬡ INITIALIZE ACCOUNT</button>
-                </form>
-                <div class="text-center mt-3" style="border-top: 1px solid var(--glass-border); padding-top: 1rem;">
-                    <span style="color: var(--text-muted); font-size: 0.85rem;">Already registered?</span>
-                    <a href="{{ url_for('auth.login') }}" style="font-weight: 600; letter-spacing: 1px;">Login here</a>
-                </div>
-            </div>
-        </div>
-        <div class="card mt-3 float-in float-in-delay-2">
-            <div class="card-body" style="font-size: 0.82rem;">
-                <div class="encrypt-badge mb-2"><span class="dot"></span> AUTO-ENCRYPTION ENABLED</div>
-                <span style="color: var(--text-muted);">Your data will be encrypted with RSA-1024. An ECC key pair (secp256k1) will be generated for your posts. Passwords are hashed with SHA-256 + salt.</span>
-            </div>
-        </div>
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:2rem 0;">
+  <div style="width:100%;max-width:460px;">
+
+    {# ── HEADER ── #}
+    <div class="float-in text-center mb-4">
+      <div style="font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;">
+        // NEW IDENTITY
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);letter-spacing:2px;margin-top:8px;">initialize encrypted account · keys generated on register</div>
     </div>
+
+    {# ── ENCRYPTION NOTICE ── #}
+    <div class="float-in float-in-delay-1" style="background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.18);border-radius:10px;padding:11px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:11px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--green);letter-spacing:0.5px;line-height:1.6;">AUTO-ENCRYPTION ENABLED · RSA-1024 profile · ECC secp256k1 keypair generated · SHA-256 + salt password hash</span>
+    </div>
+
+    {# ── CARD ── #}
+    <div class="float-in float-in-delay-2 compose-card" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-top:2px solid var(--purple);border-radius:14px;padding:28px 30px;">
+
+      <form method="POST" action="{{ url_for('auth.register') }}">
+        <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+
+        {# Username #}
+        <div style="margin-bottom:16px;">
+          <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:7px;">HANDLE <span style="color:var(--text-muted);font-size:0.55rem;">· 3-50 chars</span></label>
+          <input type="text" name="username" required minlength="3" maxlength="50" autocomplete="username" placeholder="choose a handle..."
+                 style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(180,0,255,0.18);border-radius:8px;padding:11px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color .2s;"
+                 onfocus="this.style.borderColor='rgba(180,0,255,0.55)'" onblur="this.style.borderColor='rgba(180,0,255,0.18)'">
+        </div>
+
+        {# Email #}
+        <div style="margin-bottom:16px;">
+          <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:7px;">EMAIL</label>
+          <input type="email" name="email" required autocomplete="email" placeholder="your@email.com"
+                 style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(180,0,255,0.18);border-radius:8px;padding:11px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color .2s;"
+                 onfocus="this.style.borderColor='rgba(180,0,255,0.55)'" onblur="this.style.borderColor='rgba(180,0,255,0.18)'">
+        </div>
+
+        {# Phone #}
+        <div style="margin-bottom:16px;">
+          <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:7px;">PHONE <span style="color:var(--text-muted);font-size:0.55rem;">· optional</span></label>
+          <input type="tel" name="phone" autocomplete="tel" placeholder="+1 (555) 000-0000"
+                 style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(180,0,255,0.18);border-radius:8px;padding:11px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color .2s;"
+                 onfocus="this.style.borderColor='rgba(180,0,255,0.55)'" onblur="this.style.borderColor='rgba(180,0,255,0.18)'">
+        </div>
+
+        {# Divider #}
+        <div style="border-top:1px solid rgba(255,255,255,0.05);margin:18px 0;"></div>
+
+        {# Password #}
+        <div style="margin-bottom:16px;">
+          <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:7px;">PASSPHRASE <span style="color:var(--text-muted);font-size:0.55rem;">· min 6 chars</span></label>
+          <input type="password" name="password" required minlength="6" autocomplete="new-password" placeholder="create passphrase..."
+                 style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(180,0,255,0.18);border-radius:8px;padding:11px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color .2s;"
+                 onfocus="this.style.borderColor='rgba(180,0,255,0.55)'" onblur="this.style.borderColor='rgba(180,0,255,0.18)'">
+        </div>
+
+        {# Confirm #}
+        <div style="margin-bottom:24px;">
+          <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:7px;">CONFIRM PASSPHRASE</label>
+          <input type="password" name="confirm_password" required autocomplete="new-password" placeholder="repeat passphrase..."
+                 id="confirm_pw"
+                 style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(180,0,255,0.18);border-radius:8px;padding:11px 14px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.88rem;outline:none;transition:border-color .2s;"
+                 onfocus="this.style.borderColor='rgba(180,0,255,0.55)'" onblur="this.style.borderColor='rgba(180,0,255,0.18)'">
+          <div id="pw-match" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;margin-top:5px;height:14px;"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100" style="font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:3px;padding:13px;background:linear-gradient(135deg,rgba(180,0,255,0.25),rgba(0,240,255,0.15));border-color:rgba(180,0,255,0.5);">
+          ⬡ INITIALIZE ACCOUNT
+        </button>
+      </form>
+
+      <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:20px;padding-top:16px;text-align:center;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-muted);">already registered? &nbsp;</span>
+        <a href="{{ url_for('auth.login') }}" style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:1.5px;color:var(--cyan);text-decoration:none;">AUTHENTICATE →</a>
+      </div>
+    </div>
+
+  </div>
 </div>
+
+<script>
+(function() {
+  var pw = document.querySelector('input[name="password"]');
+  var cf = document.getElementById('confirm_pw');
+  var hint = document.getElementById('pw-match');
+  function check() {
+    if (!cf.value) { hint.textContent = ''; return; }
+    if (pw.value === cf.value) {
+      hint.textContent = '✓ passphrases match';
+      hint.style.color = 'var(--green)';
+    } else {
+      hint.textContent = '✗ passphrases do not match';
+      hint.style.color = 'var(--red)';
+    }
+  }
+  pw.addEventListener('input', check);
+  cf.addEventListener('input', check);
+})();
+</script>
+
 {% endblock %}

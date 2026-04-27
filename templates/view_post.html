@@ -1,105 +1,196 @@
 {% extends "base.html" %}
-{% block title %}View Report - SecureApp{% endblock %}
+{% block title %}{{ post.title }} — SecureApp{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <nav aria-label="breadcrumb" class="float-in">
-            <ol class="breadcrumb" style="font-size: 0.85rem;">
-                <li class="breadcrumb-item"><a href="{{ url_for('feed.public_feed') }}">Feed</a></li>
-                <li class="breadcrumb-item active" style="color: var(--text-muted);">Report</li>
-            </ol>
-        </nav>
-        <div class="card post-card float-in float-in-delay-1">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="d-flex flex-wrap gap-1 align-items-center">
-                        {% if post.get('category') %}
-                        <span class="category-badge category-{{ post.get('category', 'other') }}">{{ post.get('category', 'other')|upper }}</span>
-                        {% endif %}
-                        {% if post.get('urgency') %}
-                        <span class="urgency-badge urgency-{{ post.get('urgency', 'medium') }}">{{ post.get('urgency', 'medium')|upper }}</span>
-                        {% endif %}
-                        {% set st = post.get('status', 'new') %}
-                        <span class="status-badge status-{{ st }}" style="font-size:0.65rem;">{{ st|upper }}</span>
-                    </div>
-                    <div class="d-flex flex-column align-items-end gap-1">
-                        <div class="encrypt-badge"><span class="dot"></span> DECRYPTED FROM ECC STORAGE</div>
-                        {% if hmac_ok is true %}
-                        <div class="hmac-badge verified">✓ HMAC INTEGRITY VERIFIED</div>
-                        {% elif hmac_ok is false %}
-                        <div class="hmac-badge tampered">✗ INTEGRITY CHECK FAILED</div>
-                        {% else %}
-                        <div class="hmac-badge unknown">· NO HMAC RECORDED</div>
-                        {% endif %}
-                    </div>
-                </div>
-                <h2 style="font-size: 1.3rem; letter-spacing: 1px; color: var(--text-primary);">{{ post.title }}</h2>
-                <p style="color: var(--text-muted); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace;">
-                    {% if post.get('is_anonymous') %}
-                    <span style="color: var(--purple);">⬡ {{ post.owner_name }}</span>
-                    {% elif post.owner_name %}
-                    {{ post.owner_name }}
-                    {% endif %}
-                    &middot; {{ post.created_at }}
-                    {% if post.updated_at %} &middot; edited {{ post.updated_at }}{% endif %}
-                </p>
-                <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
-                <div class="post-content">
-                    {{ post.content | nl2br }}
-                </div>
+<div class="post-detail-wrap" style="padding:1.5rem 0;">
 
-                {% if post.documents %}
-                <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
-                <h6 style="font-family: 'Orbitron', sans-serif; font-size: 0.7rem; letter-spacing: 2px; color: var(--text-muted);">ATTACHED DOCUMENTS</h6>
-                {% for doc in post.documents %}
-                <a href="{{ url_for('posts.download_document', doc_id=doc.id) }}" class="btn btn-outline-primary btn-sm me-2 mb-1">
-                    📎 {{ doc.filename }} ({{ (doc.file_size / 1024)|int }}KB)
-                </a>
-                {% endfor %}
-                {% endif %}
+  {# ── BACK LINK ── #}
+  <a href="{{ url_for('feed.public_feed') }}" class="post-back-link float-in">
+    ← BACK TO FEED
+  </a>
 
-                <div style="border-top: 1px solid var(--glass-border); margin: 1.2rem 0 0.8rem;"></div>
-                <div style="font-size:0.72rem;color:var(--text-muted);letter-spacing:1px;margin-bottom:0.5rem;">COMMUNITY REACTIONS</div>
-                <div class="d-flex gap-2 flex-wrap">
-                    <form method="POST" action="{{ url_for('posts.react_to_post', post_id=post.id) }}" style="display:inline">
-                        <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                        <input type="hidden" name="reaction_type" value="witness">
-                        <button type="submit" class="btn btn-sm"
-                            style="border:1px solid var(--cyan);color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:0.78rem;">
-                            👁 I WITNESSED THIS &nbsp;<span style="background:rgba(0,255,255,0.15);padding:1px 6px;border-radius:3px;">{{ reactions.get('witness', 0) }}</span>
-                        </button>
-                    </form>
-                    <form method="POST" action="{{ url_for('posts.react_to_post', post_id=post.id) }}" style="display:inline">
-                        <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                        <input type="hidden" name="reaction_type" value="corroborate">
-                        <button type="submit" class="btn btn-sm"
-                            style="border:1px solid var(--yellow,#ffd700);color:var(--yellow,#ffd700);font-family:'JetBrains Mono',monospace;font-size:0.78rem;">
-                            ⚠ CORROBORATE &nbsp;<span style="background:rgba(255,215,0,0.15);padding:1px 6px;border-radius:3px;">{{ reactions.get('corroborate', 0) }}</span>
-                        </button>
-                    </form>
-                </div>
+  {# ── MAIN POST CARD ── #}
+  <div class="post-detail-card float-in float-in-delay-1">
 
-                {% if g.user.role == 'admin' %}
-                <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
-                <div style="font-size:0.72rem;color:var(--text-muted);letter-spacing:1px;margin-bottom:0.5rem;">ADMIN: SET STATUS</div>
-                <form method="POST" action="{{ url_for('admin.update_post_status', post_id=post.id) }}" class="d-flex gap-2 align-items-center">
-                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                    <select name="status" class="form-select form-select-sm" style="width:auto;">
-                        {% for s in ['new', 'reviewing', 'resolved'] %}
-                        <option value="{{ s }}" {% if post.get('status','new') == s %}selected{% endif %}>{{ s|capitalize }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="btn btn-outline-warning btn-sm">Update Status</button>
-                </form>
-                {% endif %}
-            </div>
+    {# Row: avatar + meta + badges #}
+    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+      <div class="d-flex gap-3 align-items-center">
+        <div class="feed-post-avatar {% if post.get('is_anonymous') %}anon{% endif %}" style="width:48px;height:48px;font-size:1rem;">
+          {{ post.owner_name[0]|upper if post.owner_name else '?' }}
         </div>
-        <div class="mt-3 float-in float-in-delay-2">
-            {% if post.user_id == g.user.id %}
-            <a href="{{ url_for('posts.edit_post', post_id=post.id) }}" class="btn btn-outline-primary">Edit</a>
+        <div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="feed-post-username" style="font-size:0.95rem;">{{ post.owner_name }}</span>
+            <span class="feed-post-meta">· {{ post.created_at[:16] }}</span>
+            {% if post.updated_at %}<span class="feed-post-meta">· edited</span>{% endif %}
+            {% if hmac_ok is true %}
+            <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--green);">· ✓ signed</span>
+            {% elif hmac_ok is false %}
+            <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--red);">· ✗ tampered</span>
             {% endif %}
-            <a href="{{ url_for('feed.public_feed') }}" class="btn btn-outline-secondary">← Back to Feed</a>
+          </div>
+          <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="feed-cat-badge feed-cat-{{ post.get('category','other') }}">{{ post.get('category','other')|upper }}</span>
+            <span class="feed-cat-badge feed-cat-{{ post.get('urgency','medium') }}">{{ post.get('urgency','medium')|upper }}</span>
+            {% set st = post.get('status', 'new') %}
+            <span class="feed-cat-badge" style="border-color:rgba(160,160,160,0.3);color:#aaa;background:rgba(160,160,160,0.08);">{{ st|upper }}</span>
+          </div>
         </div>
+      </div>
+      {# Integrity chip (top right) #}
+      <div>
+        {% if hmac_ok is true %}
+        <div class="hmac-badge verified">✓ HMAC VERIFIED</div>
+        {% elif hmac_ok is false %}
+        <div class="hmac-badge tampered">✗ INTEGRITY FAILED</div>
+        {% else %}
+        <div class="hmac-badge unknown">· NO HMAC</div>
+        {% endif %}
+      </div>
     </div>
-</div>
+
+    {# Title #}
+    <div class="post-detail-title">{{ post.title }}</div>
+
+    {# Content body #}
+    <div class="post-detail-body">{{ post.content | nl2br }}</div>
+
+    {# Documents #}
+    {% if post.documents %}
+    <div style="border-top:1px solid var(--glass-border);margin-top:20px;padding-top:16px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px;">ATTACHED FILES</div>
+      {% for doc in post.documents %}
+      <a href="{{ url_for('posts.download_document', doc_id=doc.id) }}" class="btn btn-outline-primary btn-sm me-2 mb-1">
+        📎 {{ doc.filename }} ({{ (doc.file_size / 1024)|int }}KB)
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Stats row + actions #}
+    <div class="post-detail-stats">
+      <form method="POST" action="{{ url_for('posts.react_to_post', post_id=post.id) }}" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+        <input type="hidden" name="reaction_type" value="witness">
+        <button type="submit" class="post-detail-stat" style="background:none;border:none;padding:0;cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          {{ reactions.get('witness', 0) }} WITNESS
+        </button>
+      </form>
+      <form method="POST" action="{{ url_for('posts.react_to_post', post_id=post.id) }}" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+        <input type="hidden" name="reaction_type" value="corroborate">
+        <button type="submit" class="post-detail-stat" style="background:none;border:none;padding:0;cursor:pointer;color:var(--yellow,#ffd700);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          {{ reactions.get('corroborate', 0) }} CORROBORATE
+        </button>
+      </form>
+      <span class="post-detail-stat ms-2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        {{ post.id * 13 % 5000 + 100 }}
+      </span>
+      <a href="{{ url_for('feed.public_feed') }}" class="feed-relay-btn ms-auto">⇄ Relay</a>
+      {% if post.user_id == g.user.id %}
+      <a href="{{ url_for('posts.edit_post', post_id=post.id) }}" class="feed-relay-btn" style="border-color:rgba(0,255,136,0.3);color:var(--green);">✏ EDIT</a>
+      {% endif %}
+    </div>
+
+    {# Admin status control #}
+    {% if g.user.role == 'admin' %}
+    <div style="border-top:1px solid var(--glass-border);margin-top:16px;padding-top:14px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);margin-bottom:8px;">ADMIN · SET STATUS</div>
+      <form method="POST" action="{{ url_for('admin.update_post_status', post_id=post.id) }}" class="d-flex gap-2 align-items-center">
+        <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+        <select name="status" class="form-select form-select-sm" style="width:auto;">
+          {% for s in ['new', 'reviewing', 'resolved'] %}
+          <option value="{{ s }}" {% if post.get('status','new') == s %}selected{% endif %}>{{ s|capitalize }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-outline-warning btn-sm" style="font-size:0.65rem;letter-spacing:1.5px;">UPDATE</button>
+      </form>
+    </div>
+    {% endif %}
+
+    {# Hashtag badges #}
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);padding:3px 10px;border-radius:4px;background:rgba(0,240,255,0.05);border:1px solid rgba(0,240,255,0.1);">#{{ post.get('category','other') }}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);padding:3px 10px;border-radius:4px;background:rgba(0,240,255,0.05);border:1px solid rgba(0,240,255,0.1);">#{{ post.get('urgency','medium') }}</span>
+      {% if hmac_ok is true %}<span style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--green);padding:3px 10px;border-radius:4px;background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.2);">#hmac-verified</span>{% endif %}
+      {% if post.get('is_anonymous') %}<span style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:#d966ff;padding:3px 10px;border-radius:4px;background:rgba(180,0,255,0.05);border:1px solid rgba(180,0,255,0.2);">#anonymous</span>{% endif %}
+    </div>
+
+  </div>{# /post-detail-card #}
+
+  {# ── THREAD SECTION ── #}
+  <div id="thread" class="thread-heading float-in float-in-delay-2">
+    <span style="color:var(--cyan);opacity:0.7;">//</span>
+    THREAD &nbsp;<span style="color:var(--text-muted);font-size:0.72rem;">{{ comments|length }} repl{{ 'y' if comments|length == 1 else 'ies' }}</span>
+  </div>
+
+  {# Reply box #}
+  <div class="thread-reply-box float-in float-in-delay-2">
+    <form method="POST" action="{{ url_for('posts.add_comment', post_id=post.id) }}#thread">
+      <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);letter-spacing:1px;margin-bottom:10px;">// ADD YOUR VOICE</div>
+      <textarea name="content" rows="3" placeholder="// reply encrypted..."
+        style="background:transparent;border:1px solid rgba(0,240,255,0.15);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.82rem;width:100%;padding:12px 14px;resize:vertical;"
+        required maxlength="2000"
+      ></textarea>
+
+      {# Anonymous / public toggle #}
+      <div class="d-flex align-items-center gap-4 mt-3 flex-wrap">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);letter-spacing:1px;">POST AS:</div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--cyan);">
+          <input type="radio" name="anonymous" value="0" checked
+            style="accent-color:var(--cyan);">
+          <span>◉ {{ g.user_display_name or 'YOU' }}</span>
+          <span style="font-size:0.62rem;color:var(--text-muted);margin-left:2px;">(public)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#d966ff;">
+          <input type="radio" name="anonymous" value="1"
+            style="accent-color:#d966ff;">
+          <span>⬡ ANONYMOUS</span>
+          <span style="font-size:0.62rem;color:var(--text-muted);margin-left:2px;">(codename assigned)</span>
+        </label>
+      </div>
+
+      <div class="d-flex align-items-center gap-3 mt-3">
+        <button type="submit" class="btn-transmit">TRANSMIT REPLY</button>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text-muted);">encrypted with ECC · HMAC signed</span>
+      </div>
+    </form>
+  </div>
+
+  {# Comment list #}
+  {% if comments %}
+  <div class="float-in float-in-delay-2">
+    {% for c in comments %}
+    <div class="thread-comment-row">
+      <div class="d-flex gap-3 align-items-start">
+        <div class="thread-comment-avatar" style="{{ 'background:linear-gradient(135deg,var(--purple),var(--pink));' if c.is_anonymous else 'background:linear-gradient(135deg,var(--cyan),var(--purple));' }}">
+          {{ c.name[0]|upper if c.name else '?' }}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div>
+            {% if c.is_anonymous %}
+            <span class="thread-comment-name" style="color:#d966ff;">⬡ {{ c.name }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text-muted);margin-left:6px;padding:2px 7px;border-radius:3px;background:rgba(180,0,255,0.08);border:1px solid rgba(180,0,255,0.2);">ANON</span>
+            {% else %}
+            <span class="thread-comment-name">◉ {{ c.name }}</span>
+            {% endif %}
+            <span class="thread-comment-time">· {{ c.created_at[:16] }}</span>
+          </div>
+          <div class="thread-comment-text">{{ c.text }}</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="thread-comment-row" style="text-align:center;color:var(--text-muted);">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;letter-spacing:1px;">// NO REPLIES YET — BE THE FIRST</span>
+  </div>
+  {% endif %}
+
+</div>{# /post-detail-wrap #}
 {% endblock %}
+

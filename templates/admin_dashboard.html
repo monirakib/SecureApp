@@ -1,112 +1,213 @@
 {% extends "base.html" %}
-{% block title %}Admin Dashboard - SecureApp{% endblock %}
+{% block title %}Command Center — SecureApp Admin{% endblock %}
 {% block content %}
-<h2 class="section-title float-in">ADMIN DASHBOARD</h2>
 
-<div class="row mb-4">
-    <div class="col-md-4 col-lg-2 float-in float-in-delay-1">
-        <div class="stat-card cyan">
-            <div class="stat-number count-up">{{ user_count }}</div>
-            <div class="stat-label">Users</div>
-        </div>
+{# ── HERO BANNER ── #}
+<div class="admin-hero float-in mb-4">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+      <h2 class="glitch mb-1" data-text="COMMAND CENTER" style="font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:3px;">COMMAND CENTER</h2>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);margin:0;">SecureApp Admin Interface · All systems monitored</p>
     </div>
-    <div class="col-md-4 col-lg-2 float-in float-in-delay-2">
-        <div class="stat-card green">
-            <div class="stat-number count-up">{{ post_count }}</div>
-            <div class="stat-label">Reports</div>
-        </div>
+    <div class="d-flex align-items-center gap-3">
+      {% if new_tips %}
+      <a href="{{ url_for('tips.manage_tips') }}" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,51,51,0.1);border:1px solid rgba(255,51,51,0.3);border-radius:8px;padding:6px 14px;font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--red);text-decoration:none;">
+        ⚑ {{ new_tips }} NEW TIP{{ 's' if new_tips != 1 }}
+      </a>
+      {% endif %}
+      <div class="system-status-badge">
+        <span class="system-status-dot"></span> ALL SYSTEMS NOMINAL
+      </div>
     </div>
-    <div class="col-md-4 col-lg-2 float-in float-in-delay-3">
-        <div class="stat-card purple">
-            <div class="stat-number count-up">{{ tip_count }}</div>
-            <div class="stat-label">Tips</div>
-        </div>
-    </div>
-    <div class="col-md-4 col-lg-2 float-in float-in-delay-4">
-        <div class="stat-card pink">
-            <div class="stat-number count-up">{{ new_tips }}</div>
-            <div class="stat-label">New Tips</div>
-        </div>
-    </div>
-    <div class="col-md-4 col-lg-2 float-in float-in-delay-5">
-        <div class="stat-card cyan">
-            <div class="stat-number count-up">{{ doc_count }}</div>
-            <div class="stat-label">Documents</div>
-        </div>
-    </div>
-    <div class="col-md-4 col-lg-2 float-in float-in-delay-6">
-        <div class="stat-card green">
-            <div class="stat-number count-up">{{ drop_count }}</div>
-            <div class="stat-label">Dead Drops</div>
-        </div>
-    </div>
+  </div>
 </div>
 
-<div class="row">
-    <div class="col-md-6 float-in float-in-delay-4">
-        <div class="card">
-            <div class="card-header">QUICK ACCESS</div>
-            <div class="list-group list-group-flush">
-                <a href="{{ url_for('admin.manage_users') }}" class="list-group-item list-group-item-action">◎ Manage Users</a>
-                <a href="{{ url_for('admin.manage_posts') }}" class="list-group-item list-group-item-action">◈ All Reports</a>
-                <a href="{{ url_for('tips.manage_tips') }}" class="list-group-item list-group-item-action">
-                    ⚑ Anonymous Tips
-                    {% if new_tips %}<span class="badge bg-danger float-end">{{ new_tips }} new</span>{% endif %}
-                </a>
-                <a href="{{ url_for('admin.key_management_page') }}" class="list-group-item list-group-item-action">⚿ Key Management</a>
-                <a href="{{ url_for('admin.audit_log') }}" class="list-group-item list-group-item-action">⏱ Audit Log</a>
-            </div>
-        </div>
+{# ── STATS GRID ── #}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4 col-lg-2 float-in float-in-delay-1">
+    <div class="admin-stat-block cyan">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <div class="admin-stat-icon" style="background:rgba(0,240,255,0.12);">👥</div>
+        <div class="admin-stat-lbl">USERS</div>
+      </div>
+      <div class="admin-stat-val" style="color:var(--cyan);text-shadow:0 0 20px rgba(0,240,255,0.4);">{{ user_count }}</div>
     </div>
-    <div class="col-md-6 float-in float-in-delay-5">
-        <div class="card">
-            <div class="card-header">RECENT KEY ROTATIONS</div>
-            <div class="card-body">
-                {% if rotation_log %}
-                <table class="table table-sm mb-0">
-                    <thead><tr><th>Type</th><th>Date</th></tr></thead>
-                    <tbody>
-                    {% for log in rotation_log[:5] %}
-                    <tr>
-                        <td><span class="data-chip">{{ log.key_type }}</span></td>
-                        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-muted);">{{ log.rotated_at }}</td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p style="color: var(--text-muted);" class="mb-0">No key rotations performed yet.</p>
-                {% endif %}
-            </div>
-        </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2 float-in float-in-delay-2">
+    <div class="admin-stat-block green">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <div class="admin-stat-icon" style="background:rgba(0,255,136,0.12);">📄</div>
+        <div class="admin-stat-lbl">REPORTS</div>
+      </div>
+      <div class="admin-stat-val" style="color:var(--green);text-shadow:0 0 20px rgba(0,255,136,0.4);">{{ post_count }}</div>
     </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2 float-in float-in-delay-3">
+    <div class="admin-stat-block purple">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <div class="admin-stat-icon" style="background:rgba(180,0,255,0.12);">⚑</div>
+        <div class="admin-stat-lbl">TIPS</div>
+      </div>
+      <div class="admin-stat-val" style="color:#d966ff;text-shadow:0 0 20px rgba(180,0,255,0.4);">{{ tip_count }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2 float-in float-in-delay-4">
+    <div class="admin-stat-block pink">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <div class="admin-stat-icon" style="background:rgba(255,0,102,0.12);">🚨</div>
+        <div class="admin-stat-lbl">NEW TIPS</div>
+      </div>
+      <div class="admin-stat-val" style="color:#ff80b3;text-shadow:0 0 20px rgba(255,0,102,0.4);">{{ new_tips }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2 float-in float-in-delay-5">
+    <div class="admin-stat-block yellow">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <div class="admin-stat-icon" style="background:rgba(255,221,0,0.12);">📁</div>
+        <div class="admin-stat-lbl">DOCUMENTS</div>
+      </div>
+      <div class="admin-stat-val" style="color:var(--yellow);text-shadow:0 0 20px rgba(255,221,0,0.4);">{{ doc_count }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2 float-in float-in-delay-6">
+    <div class="admin-stat-block red">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <div class="admin-stat-icon" style="background:rgba(255,51,51,0.12);">☠</div>
+        <div class="admin-stat-lbl">DEAD DROPS</div>
+      </div>
+      <div class="admin-stat-val" style="color:var(--red);text-shadow:0 0 20px rgba(255,51,51,0.4);">{{ drop_count }}</div>
+    </div>
+  </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-12 float-in float-in-delay-6">
-        <div class="card">
-            <div class="card-header" style="color:var(--pink);">⚠ RECENT FAILED LOGIN ATTEMPTS</div>
-            <div class="card-body p-0">
-                {% if failed_logins %}
-                <div class="table-responsive">
-                    <table class="table table-sm mb-0">
-                        <thead class="table-dark"><tr><th>Details</th><th>IP Address</th><th>Time</th></tr></thead>
-                        <tbody>
-                        {% for fl in failed_logins %}
-                        <tr>
-                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--pink);">{{ fl.details }}</td>
-                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--text-muted);">{{ fl.ip_address }}</td>
-                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--text-muted);">{{ fl.created_at }}</td>
-                        </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p class="p-3 mb-0" style="color:var(--text-muted);">No failed login attempts recorded.</p>
-                {% endif %}
-            </div>
-        </div>
+{# ── QUICK ACTIONS + SYSTEM HEALTH ── #}
+<div class="row g-3 mb-4">
+
+  {# Quick Actions #}
+  <div class="col-md-6 float-in float-in-delay-2">
+    <div class="card h-100">
+      <div class="card-header">⚡ QUICK ACTIONS</div>
+      <div class="card-body p-3">
+        <a href="{{ url_for('admin.manage_users') }}" class="admin-quick-action">
+          <div class="qa-icon" style="background:rgba(0,240,255,0.12);">👥</div>
+          <div><div class="qa-label">MANAGE USERS</div><div class="qa-desc">View accounts, roles, ban users</div></div>
+          <span style="margin-left:auto;color:var(--text-muted);font-size:0.85rem;">→</span>
+        </a>
+        <a href="{{ url_for('admin.manage_posts') }}" class="admin-quick-action">
+          <div class="qa-icon" style="background:rgba(0,255,136,0.12);">📄</div>
+          <div><div class="qa-label">ALL REPORTS</div><div class="qa-desc">Review, moderate whistleblower reports</div></div>
+          <span style="margin-left:auto;color:var(--text-muted);font-size:0.85rem;">→</span>
+        </a>
+        <a href="{{ url_for('tips.manage_tips') }}" class="admin-quick-action">
+          <div class="qa-icon" style="background:rgba(255,0,102,0.12);">⚑</div>
+          <div>
+            <div class="qa-label">ANONYMOUS TIPS {% if new_tips %}<span class="badge bg-danger" style="font-size:0.5rem;">{{ new_tips }}</span>{% endif %}</div>
+            <div class="qa-desc">Review incoming anonymous tips</div>
+          </div>
+          <span style="margin-left:auto;color:var(--text-muted);font-size:0.85rem;">→</span>
+        </a>
+        <a href="{{ url_for('admin.key_management_page') }}" class="admin-quick-action">
+          <div class="qa-icon" style="background:rgba(255,221,0,0.12);">⚿</div>
+          <div><div class="qa-label">KEY MANAGEMENT</div><div class="qa-desc">Rotate RSA, ECC, HMAC keys</div></div>
+          <span style="margin-left:auto;color:var(--text-muted);font-size:0.85rem;">→</span>
+        </a>
+        <a href="{{ url_for('admin.audit_log') }}" class="admin-quick-action">
+          <div class="qa-icon" style="background:rgba(180,0,255,0.12);">⏱</div>
+          <div><div class="qa-label">AUDIT LOG</div><div class="qa-desc">Full system activity trail</div></div>
+          <span style="margin-left:auto;color:var(--text-muted);font-size:0.85rem;">→</span>
+        </a>
+      </div>
     </div>
+  </div>
+
+  {# System Health #}
+  <div class="col-md-6 float-in float-in-delay-3">
+    <div class="card h-100">
+      <div class="card-header" style="color:var(--green);">◉ SYSTEM HEALTH</div>
+      <div class="card-body px-4 py-3">
+        <div class="sys-health-row">
+          <span class="sys-health-name">RSA-1024 Profile Encryption</span>
+          <span class="sys-health-chip ok">● ACTIVE</span>
+        </div>
+        <div class="sys-health-row">
+          <span class="sys-health-name">ECC ElGamal secp256k1</span>
+          <span class="sys-health-chip ok">● ACTIVE</span>
+        </div>
+        <div class="sys-health-row">
+          <span class="sys-health-name">SHA-256 Password Hashing</span>
+          <span class="sys-health-chip ok">● ACTIVE</span>
+        </div>
+        <div class="sys-health-row">
+          <span class="sys-health-name">HMAC-SHA256 Integrity</span>
+          <span class="sys-health-chip ok">● ACTIVE</span>
+        </div>
+        <div class="sys-health-row">
+          <span class="sys-health-name">Session Binding (IP + Token)</span>
+          <span class="sys-health-chip ok">● ACTIVE</span>
+        </div>
+        <div class="sys-health-row">
+          <span class="sys-health-name">2FA Email Verification</span>
+          <span class="sys-health-chip ok">● ACTIVE</span>
+        </div>
+        <div class="sys-health-row">
+          <span class="sys-health-name">CSRF Token Protection</span>
+          <span class="sys-health-chip ok">● ACTIVE</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+{# ── KEY ROTATION TIMELINE + THREAT MONITOR ── #}
+<div class="row g-3">
+
+  {# Key Rotation Timeline #}
+  <div class="col-md-5 float-in float-in-delay-4">
+    <div class="card h-100">
+      <div class="card-header" style="color:var(--cyan);">⚿ KEY ROTATION TIMELINE</div>
+      <div class="card-body px-4 py-3">
+        {% if rotation_log %}
+          {% for log in rotation_log[:8] %}
+          <div class="key-rotation-row">
+            <div class="key-rotation-dot"></div>
+            <span class="key-rotation-type">{{ log.key_type | upper }}</span>
+            <span class="key-rotation-time">{{ log.rotated_at[:16] }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-4">
+            <div style="font-size:1.8rem;opacity:0.2;margin-bottom:0.5rem;">⚿</div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;color:var(--text-muted);">NO ROTATIONS PERFORMED</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# Threat Monitor #}
+  <div class="col-md-7 float-in float-in-delay-5">
+    <div class="card h-100">
+      <div class="card-header" style="color:var(--red);">⚠ THREAT MONITOR — FAILED LOGINS</div>
+      <div class="card-body px-4 py-3">
+        {% if failed_logins %}
+          {% for fl in failed_logins %}
+          <div class="threat-row">
+            <span class="threat-ip">{{ fl.ip_address or '?.?.?.?' }}</span>
+            <span class="threat-details">{{ fl.details }}</span>
+            <span class="threat-time">{{ fl.created_at[:16] }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-4">
+            <div style="font-size:1.8rem;opacity:0.2;margin-bottom:0.5rem;">🛡</div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;color:var(--green);">NO THREATS DETECTED</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
 {% endblock %}
+

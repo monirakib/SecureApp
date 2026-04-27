@@ -1,62 +1,95 @@
 {% extends "base.html" %}
-{% block title %}All Reports - SecureApp{% endblock %}
+{% block title %}All Reports — SecureApp{% endblock %}
 {% block content %}
-<h2 class="section-title float-in">ALL REPORTS</h2>
+<div style="max-width:1200px;margin:0 auto;padding:0.5rem 0 2rem;">
 
-{% if posts %}
-<div class="card float-in float-in-delay-1">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-striped mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Title</th>
-                        <th>Category</th>
-                        <th>Urgency</th>
-                        <th>Status</th>
-                        <th>Author</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for post in posts %}
-                    <tr>
-                        <td><span class="data-chip">{{ post.id }}</span></td>
-                        <td style="font-weight: 600;">{{ post.title }}</td>
-                        <td>{% if post.get('category') %}<span class="category-badge category-{{ post.get('category','other') }}" style="font-size:0.65rem;">{{ post.get('category','other')|upper }}</span>{% endif %}</td>
-                        <td>{% if post.get('urgency') %}<span class="urgency-badge urgency-{{ post.get('urgency','medium') }}" style="font-size:0.65rem;">{{ post.get('urgency','medium')|upper }}</span>{% endif %}</td>
-                        <td>
-                            <form method="POST" action="{{ url_for('admin.update_post_status', post_id=post.id) }}" class="d-flex gap-1">
-                                <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                                <select name="status" class="form-select form-select-sm" style="width:auto;font-size:0.72rem;" onchange="this.form.submit()">
-                                    {% for s in ['new', 'reviewing', 'resolved'] %}
-                                    <option value="{{ s }}" {% if post.get('status','new') == s %}selected{% endif %}>{{ s|capitalize }}</option>
-                                    {% endfor %}
-                                </select>
-                            </form>
-                        </td>
-                        <td>{% if post.get('is_anonymous') %}<span style="color:var(--purple);">{{ post.owner_name }}</span>{% else %}{{ post.owner_name }}{% endif %}</td>
-                        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-muted);">{{ post.created_at }}</td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ url_for('posts.view_post', post_id=post.id) }}" class="btn btn-outline-primary btn-sm">View</a>
-                                <form method="POST" action="{{ url_for('admin.admin_delete_post', post_id=post.id) }}"
-                                      style="display:inline" onsubmit="return confirm('Delete this report?')">
-                                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+  {# ── HEADER ── #}
+  <div class="float-in d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:1.85rem;font-weight:900;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 28px rgba(0,240,255,0.3);line-height:1.1;">
+        <span style="opacity:0.6;">// </span>ALL REPORTS
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);letter-spacing:1px;margin-top:5px;">
+        {{ posts|length }} reports in system &nbsp;·&nbsp; moderation console
+      </div>
     </div>
+    <a href="{{ url_for('admin.dashboard') }}" style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;padding:9px 18px;border:1px solid rgba(0,240,255,0.25);border-radius:8px;color:var(--text-muted);text-decoration:none;transition:all .2s;"
+       onmouseover="this.style.borderColor='rgba(0,240,255,0.6)';this.style.color='var(--cyan)'" onmouseout="this.style.borderColor='rgba(0,240,255,0.25)';this.style.color='var(--text-muted)'">
+      ← COMMAND CENTER
+    </a>
+  </div>
+
+  {% if posts %}
+  <div class="float-in float-in-delay-1" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;overflow:hidden;">
+
+    {# Header row #}
+    <div style="display:grid;grid-template-columns:55px 1fr 110px 100px 130px 120px 120px 110px;gap:0;padding:11px 20px;border-bottom:1px solid rgba(0,240,255,0.15);background:rgba(0,240,255,0.04);">
+      {% for col in ['ID','TITLE','CATEGORY','URGENCY','STATUS','AUTHOR','CREATED','ACTIONS'] %}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.58rem;letter-spacing:2px;color:var(--text-muted);">{{ col }}</span>
+      {% endfor %}
+    </div>
+
+    {% for post in posts %}
+    <div style="display:grid;grid-template-columns:55px 1fr 110px 100px 130px 120px 120px 110px;gap:0;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.04);align-items:center;transition:background .15s;"
+         onmouseover="this.style.background='rgba(0,240,255,0.03)'" onmouseout="this.style.background='transparent'">
+
+      {# ID #}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);">#{{ post.id }}</span>
+
+      {# Title #}
+      <span style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:12px;">{{ post.title }}</span>
+
+      {# Category #}
+      {% set cat = post.get('category','other') %}
+      {% set cat_colors = {'corruption':'var(--red)','fraud':'var(--yellow)','safety':'var(--green)','harassment':'var(--pink)','environmental':'#00ccff','corporate':'var(--purple)','government':'orange','other':'var(--text-muted)'} %}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.52rem;letter-spacing:1.5px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:{{ cat_colors.get(cat,'var(--text-muted)') }};width:fit-content;">{{ cat|upper }}</span>
+
+      {# Urgency #}
+      {% set urg = post.get('urgency','medium') %}
+      {% set urg_colors = {'critical':'var(--red)','high':'#ff8c00','medium':'var(--yellow)','low':'var(--green)'} %}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.52rem;letter-spacing:1.5px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:{{ urg_colors.get(urg,'var(--text-muted)') }};width:fit-content;">{{ urg|upper }}</span>
+
+      {# Status dropdown #}
+      <form method="POST" action="{{ url_for('admin.update_post_status', post_id=post.id) }}" style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+        <select name="status" onchange="this.form.submit()"
+                style="background:rgba(5,5,20,0.8);border:1px solid rgba(0,240,255,0.18);border-radius:6px;padding:4px 8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.7rem;cursor:pointer;outline:none;">
+          {% for s in ['new','reviewing','resolved'] %}
+          <option value="{{ s }}" {% if post.get('status','new') == s %}selected{% endif %}>{{ s|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </form>
+
+      {# Author #}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:{% if post.get('is_anonymous') %}var(--purple){% else %}var(--text-secondary){% endif %};">{{ post.owner_name }}</span>
+
+      {# Date #}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);">{{ post.created_at[:10] }}</span>
+
+      {# Actions #}
+      <div style="display:flex;gap:6px;">
+        <a href="{{ url_for('posts.view_post', post_id=post.id) }}"
+           style="font-family:'Orbitron',sans-serif;font-size:0.52rem;letter-spacing:1px;padding:5px 10px;border-radius:6px;background:rgba(0,240,255,0.08);border:1px solid rgba(0,240,255,0.25);color:var(--cyan);text-decoration:none;transition:all .15s;"
+           onmouseover="this.style.background='rgba(0,240,255,0.18)'" onmouseout="this.style.background='rgba(0,240,255,0.08)'">VIEW</a>
+        <form method="POST" action="{{ url_for('admin.admin_delete_post', post_id=post.id) }}" style="margin:0;" onsubmit="return confirm('Delete this report?')">
+          <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+          <button type="submit"
+                  style="font-family:'Orbitron',sans-serif;font-size:0.52rem;letter-spacing:1px;padding:5px 10px;border-radius:6px;background:rgba(255,51,51,0.08);border:1px solid rgba(255,51,51,0.25);color:var(--red);cursor:pointer;transition:all .15s;"
+                  onmouseover="this.style.background='rgba(255,51,51,0.18)'" onmouseout="this.style.background='rgba(255,51,51,0.08)'">DEL</button>
+        </form>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="float-in float-in-delay-1" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;padding:60px 20px;text-align:center;">
+    <div style="font-size:2.5rem;opacity:0.15;margin-bottom:12px;">📄</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:3px;color:var(--text-muted);">NO REPORTS</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);margin-top:8px;">No reports have been filed yet.</div>
+  </div>
+  {% endif %}
+
 </div>
-{% else %}
-<p style="color: var(--text-muted);" class="float-in float-in-delay-1">No reports in the system.</p>
-{% endif %}
 {% endblock %}

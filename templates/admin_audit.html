@@ -1,44 +1,110 @@
 {% extends "base.html" %}
-{% block title %}Audit Log - SecureApp{% endblock %}
+{% block title %}Audit Log — SecureApp{% endblock %}
 {% block content %}
-<h2 class="section-title float-in">AUDIT LOG</h2>
+<div style="max-width:1200px;margin:0 auto;padding:0.5rem 0 2rem;">
 
-{% if logs %}
-<div class="card float-in float-in-delay-1">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-striped mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Time</th>
-                        <th>User</th>
-                        <th>Action</th>
-                        <th>Details</th>
-                        <th>IP</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in logs %}
-                    <tr>
-                        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted); white-space: nowrap;">{{ log.created_at }}</td>
-                        <td>
-                            {% if log.username == 'Anonymous' %}
-                            <span style="color: var(--purple);">{{ log.username }}</span>
-                            {% else %}
-                            {{ log.username }}
-                            {% endif %}
-                        </td>
-                        <td><span class="data-chip">{{ log.action }}</span></td>
-                        <td style="color: var(--text-secondary); font-size: 0.85rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ log.details }}</td>
-                        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted);">{{ log.ip_address }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+  {# ── HEADER ── #}
+  <div class="float-in d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:1.85rem;font-weight:900;letter-spacing:3px;color:var(--purple);text-shadow:0 0 28px rgba(180,0,255,0.3);line-height:1.1;">
+        <span style="opacity:0.6;">// </span>AUDIT LOG
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);letter-spacing:1px;margin-top:5px;">
+        {{ logs|length }} entries &nbsp;·&nbsp; full system activity trail
+      </div>
     </div>
+    <a href="{{ url_for('admin.dashboard') }}" style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;padding:9px 18px;border:1px solid rgba(0,240,255,0.25);border-radius:8px;color:var(--text-muted);text-decoration:none;transition:all .2s;"
+       onmouseover="this.style.borderColor='rgba(0,240,255,0.6)';this.style.color='var(--cyan)'" onmouseout="this.style.borderColor='rgba(0,240,255,0.25)';this.style.color='var(--text-muted)'">
+      ← COMMAND CENTER
+    </a>
+  </div>
+
+  {% if logs %}
+  <div class="float-in float-in-delay-1" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;overflow:hidden;">
+
+    {# Header row #}
+    <div style="display:grid;grid-template-columns:155px 130px 170px 1fr 130px;gap:0;padding:11px 20px;border-bottom:1px solid rgba(180,0,255,0.18);background:rgba(180,0,255,0.05);">
+      {% for col in ['TIMESTAMP','USER','ACTION','DETAILS','IP ADDRESS'] %}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.58rem;letter-spacing:2px;color:var(--text-muted);">{{ col }}</span>
+      {% endfor %}
+    </div>
+
+    {# Search bar #}
+    <div style="padding:10px 20px;border-bottom:1px solid rgba(255,255,255,0.04);background:rgba(0,0,0,0.15);position:relative;">
+      <span style="position:absolute;left:32px;top:50%;transform:translateY(-50%);font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);">@/</span>
+      <input type="text" placeholder="filter log entries..."
+             oninput="filterLog(this.value)"
+             style="width:100%;background:transparent;border:none;padding:4px 14px 4px 36px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.8rem;outline:none;">
+    </div>
+
+    {# Log entries #}
+    <div id="audit-list">
+    {% for log in logs %}
+    {# Colour-code actions #}
+    {% if 'delete' in log.action or 'ban' in log.action %}
+      {% set action_color = 'var(--red)' %}
+    {% elif 'login' in log.action or 'register' in log.action %}
+      {% set action_color = 'var(--green)' %}
+    {% elif 'rotate' in log.action or 'key' in log.action %}
+      {% set action_color = 'var(--yellow)' %}
+    {% elif 'message' in log.action or 'tip' in log.action %}
+      {% set action_color = 'var(--cyan)' %}
+    {% elif 'admin' in log.action or 'promote' in log.action %}
+      {% set action_color = 'var(--purple)' %}
+    {% else %}
+      {% set action_color = 'var(--text-secondary)' %}
+    {% endif %}
+
+    <div class="audit-row" data-search="{{ log.action|lower }} {{ log.username|lower }} {{ log.details|lower }} {{ log.ip_address|lower }}"
+         style="display:grid;grid-template-columns:155px 130px 170px 1fr 130px;gap:0;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.03);align-items:center;transition:background .15s;"
+         onmouseover="this.style.background='rgba(180,0,255,0.04)'" onmouseout="this.style.background='transparent'">
+
+      {# Timestamp #}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text-muted);white-space:nowrap;">{{ log.created_at[:16] }}</span>
+
+      {# User #}
+      <div style="display:flex;align-items:center;gap:7px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:rgba(180,0,255,0.12);border:1px solid rgba(180,0,255,0.2);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:0.5rem;color:var(--purple);flex-shrink:0;">
+          {{ log.username[0]|upper if log.username else '?' }}
+        </div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:{% if log.username == 'Anonymous' %}var(--purple){% else %}var(--text-secondary){% endif %};">
+          {{ log.username }}
+        </span>
+      </div>
+
+      {# Action badge #}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.52rem;letter-spacing:1.5px;padding:3px 9px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:{{ action_color }};width:fit-content;white-space:nowrap;">{{ log.action }}</span>
+
+      {# Details #}
+      <span style="font-family:'Rajdhani',sans-serif;font-size:0.88rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:16px;">{{ log.details }}</span>
+
+      {# IP #}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text-muted);">{{ log.ip_address or '—' }}</span>
+
+    </div>
+    {% endfor %}
+    </div>
+
+  </div>
+
+  {% else %}
+  <div class="float-in float-in-delay-1" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;padding:60px 20px;text-align:center;">
+    <div style="font-size:2.5rem;opacity:0.15;margin-bottom:12px;">⏱</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:3px;color:var(--text-muted);">NO AUDIT ENTRIES</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);margin-top:8px;">System activity will appear here.</div>
+  </div>
+  {% endif %}
+
 </div>
-{% else %}
-<p style="color: var(--text-muted);" class="float-in float-in-delay-1">No audit entries recorded yet.</p>
-{% endif %}
+
+<script>
+function filterLog(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.audit-row').forEach(function(row) {
+    var text = row.dataset.search || '';
+    row.style.display = text.includes(q) ? '' : 'none';
+  });
+}
+</script>
+
 {% endblock %}

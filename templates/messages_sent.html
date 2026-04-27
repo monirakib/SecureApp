@@ -1,36 +1,140 @@
 {% extends "base.html" %}
-{% block title %}Sent Messages - SecureApp{% endblock %}
+{% block title %}Sent Transmissions — SecureApp{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4 float-in">
-    <h2 class="section-title mb-0">SENT MESSAGES</h2>
+
+<div style="max-width:1100px;margin:0 auto;padding:0.5rem 0 2rem;">
+
+  {# ── HEADER ── #}
+  <div class="float-in d-flex justify-content-between align-items-start mb-4">
     <div>
-        <a href="{{ url_for('messages.compose') }}" class="btn btn-primary">+ COMPOSE</a>
-        <a href="{{ url_for('messages.inbox') }}" class="btn btn-outline-secondary ms-2">Inbox</a>
+      <div style="font-family:'Orbitron',sans-serif;font-size:1.85rem;font-weight:900;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 28px rgba(0,240,255,0.3);line-height:1.1;">
+        <span style="opacity:0.6;">// </span>SENT TRANSMISSIONS
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);letter-spacing:1px;margin-top:5px;">
+        {{ messages|length }} outbound &nbsp;·&nbsp; end-to-end encrypted
+      </div>
     </div>
+    <a href="{{ url_for('messages.compose') }}" class="btn btn-primary" style="font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:2px;padding:10px 22px;">
+      + COMPOSE
+    </a>
+  </div>
+
+  {# ── TWO-COLUMN LAYOUT ── #}
+  <div style="display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start;">
+
+    {# ── LEFT SIDEBAR ── #}
+    <div class="float-in float-in-delay-1" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;overflow:hidden;">
+      {% macro nav_item(label, icon_path, count, href, is_active, icon_color='var(--text-muted)') %}
+      <a href="{{ href }}" style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.04);transition:background .15s;{% if is_active %}background:rgba(0,240,255,0.08);{% endif %}"
+         onmouseover="this.style.background='rgba(0,240,255,0.06)'" onmouseout="this.style.background='{{ 'rgba(0,240,255,0.08)' if is_active else 'transparent' }}'">
+        <div style="display:flex;align-items:center;gap:11px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{ icon_color }}" stroke-width="1.8">{{ icon_path | safe }}</svg>
+          <span style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;color:{{ 'var(--cyan)' if is_active else 'var(--text-secondary)' }};">{{ label }}</span>
+        </div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:{{ 'var(--cyan)' if is_active else 'var(--text-muted)' }};">{{ count }}</span>
+      </a>
+      {% endmacro %}
+
+      {{ nav_item('Inbox',
+          '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3l-4 4-4-4"/>',
+          '—', url_for('messages.inbox', view='inbox'), false, 'var(--cyan)') }}
+      {{ nav_item('Starred',
+          '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+          '—', url_for('messages.inbox', view='starred'), false, '#ffd700') }}
+      {{ nav_item('Sent',
+          '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+          messages|length, url_for('messages.sent'), true, 'var(--purple)') }}
+      {{ nav_item('Flagged',
+          '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+          '—', url_for('messages.inbox', view='flagged'), false, 'orange') }}
+      {{ nav_item('Vault',
+          '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+          '—', url_for('messages.inbox', view='vault'), false, 'var(--green)') }}
+    </div>
+
+    {# ── RIGHT PANEL ── #}
+    <div class="float-in float-in-delay-2">
+
+      {# Search bar #}
+      <div style="position:relative;margin-bottom:16px;">
+        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);">@/</span>
+        <input type="text" placeholder="search sent archive..."
+               oninput="filterSent(this.value)"
+               style="width:100%;background:rgba(5,5,20,0.6);border:1px solid rgba(0,240,255,0.12);border-radius:8px;padding:11px 14px 11px 38px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.82rem;outline:none;transition:border-color .2s;"
+               onfocus="this.style.borderColor='rgba(0,240,255,0.4)'" onblur="this.style.borderColor='rgba(0,240,255,0.12)'">
+      </div>
+
+      {% if messages %}
+      <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;overflow:hidden;" id="sent-list">
+        {% for msg in messages %}
+        <div class="sent-row-item" data-search="{{ msg.recipient_name|lower }} {{ msg.subject|lower }}"
+             style="border-bottom:1px solid rgba(255,255,255,0.04);">
+          <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;transition:background .15s;"
+               onmouseover="this.style.background='rgba(0,240,255,0.04)'" onmouseout="this.style.background='transparent'">
+
+            {# Arrow icon #}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.8" style="flex-shrink:0;opacity:0.45;">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+
+            {# Link area #}
+            <a href="{{ url_for('messages.view_message', msg_id=msg.id) }}" style="flex:1;min-width:0;text-decoration:none;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:2px;">
+                → {{ msg.recipient_name }}
+              </div>
+              <div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px;">
+                {{ msg.subject }}
+              </div>
+            </a>
+
+            {# Time #}
+            <span class="rel-time" data-time="{{ msg.created_at }}"
+                  style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text-muted);flex-shrink:0;">
+              {{ msg.created_at[:10] }}
+            </span>
+
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;padding:60px 20px;text-align:center;">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.2" style="margin:0 auto 14px;display:block;opacity:0.2;">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:3px;color:var(--text-muted);">NO TRANSMISSIONS</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);margin-top:8px;">You haven't sent any encrypted messages yet.</div>
+        <a href="{{ url_for('messages.compose') }}" class="btn btn-primary mt-3" style="font-size:0.7rem;">+ COMPOSE MESSAGE</a>
+      </div>
+      {% endif %}
+
+    </div>{# end right panel #}
+  </div>{# end grid #}
+
 </div>
 
-{% if messages %}
-<div class="card float-in float-in-delay-1">
-    <div class="card-body p-0">
-        <div class="list-group list-group-flush">
-            {% for msg in messages %}
-            <a href="{{ url_for('messages.view_message', msg_id=msg.id) }}"
-               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                <div>
-                    <strong>{{ msg.subject }}</strong>
-                    <br>
-                    <small style="color: var(--text-muted);">To: {{ msg.recipient_name }}</small>
-                </div>
-                <small style="color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;">{{ msg.created_at }}</small>
-            </a>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-{% else %}
-<div class="text-center float-in float-in-delay-1" style="margin-top: 10vh;">
-    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;">📤</div>
-    <h5 style="font-family: 'Orbitron', sans-serif; letter-spacing: 2px; color: var(--text-muted);">NO SENT MESSAGES</h5>
-</div>
-{% endif %}
+<script>
+document.querySelectorAll('.rel-time').forEach(function(el) {
+  var raw = el.dataset.time;
+  if (!raw) return;
+  var d = new Date(raw.replace(' ', 'T'));
+  var diff = (Date.now() - d.getTime()) / 1000;
+  var s;
+  if (diff < 60) s = Math.floor(diff) + 's';
+  else if (diff < 3600) s = Math.floor(diff/60) + 'm';
+  else if (diff < 86400) s = Math.floor(diff/3600) + 'h';
+  else s = Math.floor(diff/86400) + 'd';
+  el.textContent = s;
+});
+
+function filterSent(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.sent-row-item').forEach(function(row) {
+    var text = row.dataset.search || '';
+    row.style.display = text.includes(q) ? '' : 'none';
+  });
+}
+</script>
+
 {% endblock %}

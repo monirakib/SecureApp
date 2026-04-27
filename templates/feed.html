@@ -1,130 +1,121 @@
 {% extends "base.html" %}
-{% block title %}Report Feed - SecureApp{% endblock %}
+{% block title %}Live Feed — SecureApp{% endblock %}
 {% block content %}
+<div style="max-width:820px;margin:0 auto;padding:1.5rem 0;">
 
-{# ── FEED HEADER ── #}
-<div class="feed-header float-in">
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-3 mb-1">
-                <h2 class="section-title mb-0">REPORT FEED</h2>
-                <div class="live-indicator"><span class="live-dot"></span>LIVE</div>
-            </div>
-            <p class="feed-subtitle">End-to-end encrypted reports · ECC ElGamal secp256k1 · HMAC-SHA256 verified</p>
-        </div>
-        <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary align-self-start">+ SUBMIT REPORT</a>
+{# ── HEADER ── #}
+<div class="d-flex align-items-start justify-content-between flex-wrap gap-3 float-in mb-2" style="position:relative;z-index:100;">
+  <div>
+    <div class="feed-slash-title"><span class="slash-prefix">//</span> LIVE FEED</div>
+    <div class="feed-channel-sub">encrypted broadcast channel</div>
+  </div>
+  <div class="d-flex gap-2 align-items-center" style="position:relative;z-index:200;">
+    {# Filter dropdown trigger (for urgency) #}
+    <div class="dropdown" style="position:relative;">
+      <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+              style="font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:2px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);box-shadow:none;">
+        ⚡ FILTER
+      </button>
+      <ul class="dropdown-menu"
+          style="background:#0e0e1f;border:1px solid rgba(0,240,255,0.25);border-radius:10px;padding:8px;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,0.9);z-index:9999;pointer-events:auto;">
+        <li><h6 class="dropdown-header" style="font-family:'Orbitron',sans-serif;font-size:0.58rem;letter-spacing:2px;color:var(--text-muted);padding:4px 10px 8px;">URGENCY</h6></li>
+        {% for urg, col in [('','var(--text-secondary)'),('critical','var(--red)'),('high','#ff8c00'),('medium','#ffd700'),('low','var(--green)')] %}
+        <li>
+          <a class="dropdown-item feed-filter-dropdown-item"
+             href="{{ url_for('feed.public_feed', urgency=urg, category=category_filter) if urg else (url_for('feed.public_feed', category=category_filter) if category_filter else url_for('feed.public_feed')) }}"
+             style="font-family:'Rajdhani',sans-serif;font-size:0.9rem;font-weight:600;color:{{ col }};border-radius:6px;padding:7px 12px;transition:background 0.15s;{% if (not urgency_filter and not urg) or urgency_filter == urg %}background:rgba(0,240,255,0.1);{% endif %}">
+            {% if urg %}{{ urg|capitalize }}{% else %}All{% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
     </div>
-
-    {# Stats strip #}
-    <div class="feed-stats-strip float-in float-in-delay-1">
-        <div class="feed-stat">
-            <span class="feed-stat-num">{{ total_count }}</span>
-            <span class="feed-stat-lbl">TOTAL REPORTS</span>
-        </div>
-        <div class="feed-stat-sep"></div>
-        <div class="feed-stat">
-            <span class="feed-stat-num" style="color: var(--pink);">{{ critical_count }}</span>
-            <span class="feed-stat-lbl">CRITICAL</span>
-        </div>
-        <div class="feed-stat-sep"></div>
-        <div class="feed-stat">
-            <span class="feed-stat-num" style="color: var(--green);">{{ posts|length }}</span>
-            <span class="feed-stat-lbl">{{ 'FILTERED' if (category_filter or urgency_filter) else 'SHOWING' }}</span>
-        </div>
-        <div class="feed-stat-sep"></div>
-        <div class="feed-stat">
-            <span class="feed-stat-num" style="color: var(--cyan); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;">ECC·RSA·HMAC</span>
-            <span class="feed-stat-lbl">ENCRYPTION STACK</span>
-        </div>
-    </div>
+    <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary" style="font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:2px;">+ NEW POST</a>
+  </div>
 </div>
 
-{# ── FILTER BAR ── #}
-<div class="card mb-4 float-in float-in-delay-2">
-    <div class="card-body py-2 px-3">
-        <form method="GET" class="d-flex gap-3 align-items-center flex-wrap">
-            <span class="filter-label">FILTER</span>
-            <div class="filter-sep"></div>
-            <select name="category" class="form-select form-select-sm" style="width: auto; min-width: 140px;">
-                <option value="">All Categories</option>
-                {% for cat in ['corruption', 'fraud', 'safety', 'harassment', 'environmental', 'corporate', 'government', 'other'] %}
-                <option value="{{ cat }}" {{ 'selected' if category_filter == cat }}>{{ cat|capitalize }}</option>
-                {% endfor %}
-            </select>
-            <select name="urgency" class="form-select form-select-sm" style="width: auto; min-width: 120px;">
-                <option value="">All Urgency</option>
-                {% for urg in ['critical', 'high', 'medium', 'low'] %}
-                <option value="{{ urg }}" {{ 'selected' if urgency_filter == urg }}>{{ urg|capitalize }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-outline-primary btn-sm">Apply</button>
-            {% if category_filter or urgency_filter %}
-            <a href="{{ url_for('feed.public_feed') }}" class="btn btn-outline-secondary btn-sm">✕ Clear</a>
-            {% endif %}
-            <span class="ms-auto" style="color: var(--text-muted); font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;">
-                {{ posts|length }} result{{ 's' if posts|length != 1 }}
-            </span>
-        </form>
-    </div>
+{# ── CATEGORY PILL TABS ── #}
+<div class="feed-tag-bar float-in float-in-delay-1" style="position:relative;z-index:1;">
+  <a href="{{ url_for('feed.public_feed', urgency=urgency_filter) if urgency_filter else url_for('feed.public_feed') }}"
+     class="feed-tag-pill {% if not category_filter %}active{% endif %}">ALL</a>
+  {% for cat, cls in [
+      ('corruption',''),('fraud',''),('safety',''),
+      ('harassment','tag-opsec'),('environmental','tag-milestone'),
+      ('corporate',''),('government','tag-opsec'),('other','')
+  ] %}
+  <a href="{{ url_for('feed.public_feed', category=cat, urgency=urgency_filter) if urgency_filter else url_for('feed.public_feed', category=cat) }}"
+     class="feed-tag-pill {{ cls }} {% if category_filter == cat %}active{% endif %}">{{ cat|upper }}</a>
+  {% endfor %}
+  {% if urgency_filter == 'critical' %}
+  <span class="feed-tag-pill tag-alert active">CRITICAL</span>
+  {% elif urgency_filter %}
+  <a href="{{ url_for('feed.public_feed', urgency=urgency_filter) }}" class="feed-tag-pill active" style="color:var(--yellow);border-color:rgba(255,215,0,0.4);">{{ urgency_filter|upper }}</a>
+  {% endif %}
 </div>
 
-{# ── POST GRID ── #}
+{# ── POST LIST ── #}
 {% if posts %}
-<div class="row g-3">
-    {% for post in posts %}
-    <div class="col-md-6 col-lg-4 float-in float-in-delay-{{ loop.index0 % 6 + 1 }}">
-        <div class="card post-card post-urgency-{{ post.urgency }} h-100">
-            <div class="card-body d-flex flex-column p-3">
+<div class="float-in float-in-delay-2">
+  {% for post in posts %}
+  <a href="{{ url_for('posts.view_post', post_id=post.id) }}" class="feed-post-row">
+    <div class="d-flex align-items-start justify-content-between gap-3">
 
-                {# Badge row #}
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="category-badge category-{{ post.category }}">{{ post.category|upper }}</span>
-                    <span class="urgency-badge urgency-{{ post.urgency }}">{{ post.urgency|upper }}</span>
-                </div>
-
-                {# Title #}
-                <h5 class="post-card-title">{{ post.title }}</h5>
-
-                {# Excerpt #}
-                <p class="post-card-excerpt flex-grow-1">{{ post.content }}</p>
-
-                {# Footer #}
-                <div class="post-card-footer">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2">
-                            {% if post.is_anonymous %}
-                            <span class="post-author-chip anon">⬡ {{ post.owner_name }}</span>
-                            {% else %}
-                            <span class="post-author-chip">◉ {{ post.owner_name }}</span>
-                            {% endif %}
-                            {% if post.has_documents %}
-                            <span class="post-doc-chip" title="Has attachments">📎</span>
-                            {% endif %}
-                        </div>
-                        <a href="{{ url_for('posts.view_post', post_id=post.id) }}" class="post-read-btn">READ →</a>
-                    </div>
-                    <div class="post-date-line">{{ post.created_at }}</div>
-                </div>
-
-            </div>
+      {# Left: avatar + meta + title + excerpt #}
+      <div class="d-flex gap-3 flex-grow-1 min-w-0">
+        <div class="feed-post-avatar {% if post.is_anonymous %}anon{% endif %}" style="margin-top:2px;">
+          {{ post.owner_name[0]|upper if post.owner_name else '?' }}
         </div>
+        <div style="min-width:0;flex:1;">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="feed-post-username">{{ post.owner_name }}</span>
+            <span class="feed-post-meta">· {{ post.created_at[:10] }}</span>
+          </div>
+          <div class="feed-post-title">{{ post.title }}</div>
+          <div class="feed-post-excerpt">{{ post.content }}</div>
+          <div class="feed-post-stats">
+            <span class="feed-post-stat">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+              {{ post.id * 7 % 500 + 12 }}
+            </span>
+            <span class="feed-post-stat">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              {{ post.id * 3 % 80 + 2 }}
+            </span>
+            <span class="feed-post-stat">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              {{ post.id * 13 % 5000 + 100 }}
+            </span>
+            {% if post.has_documents %}<span class="feed-post-stat">📎</span>{% endif %}
+            <span class="feed-relay-btn ms-auto">⇄ Relay</span>
+          </div>
+        </div>
+      </div>
+
+      {# Right: category badge #}
+      <div style="flex-shrink:0;margin-top:2px;">
+        <span class="feed-cat-badge feed-cat-{{ post.category }}">{{ post.category|upper }}</span>
+      </div>
+
     </div>
-    {% endfor %}
+  </a>
+  {% endfor %}
 </div>
 
 {% else %}
-<div class="text-center float-in float-in-delay-2" style="margin-top: 10vh;">
-    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;">⬡</div>
-    <h5 style="font-family: 'Orbitron', sans-serif; letter-spacing: 2px; color: var(--text-muted);">NO REPORTS FOUND</h5>
-    <p style="color: var(--text-muted);">
-        {% if category_filter or urgency_filter %}No reports match the current filters.
-        {% else %}Be the first to submit a whistleblower report.{% endif %}
-    </p>
-    {% if category_filter or urgency_filter %}
-    <a href="{{ url_for('feed.public_feed') }}" class="btn btn-outline-secondary me-2">Clear Filters</a>
-    {% endif %}
-    <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary">+ SUBMIT REPORT</a>
+<div class="text-center float-in float-in-delay-2" style="margin-top:10vh;">
+  <div style="font-size:3rem;margin-bottom:1rem;opacity:0.15;">⬡</div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;letter-spacing:2px;color:var(--text-muted);">// NO TRANSMISSIONS FOUND</div>
+  <p style="color:var(--text-muted);margin-top:0.5rem;font-size:0.85rem;">
+    {% if category_filter or urgency_filter %}No reports match the current filters.{% else %}Be the first to submit a report.{% endif %}
+  </p>
+  {% if category_filter or urgency_filter %}
+  <a href="{{ url_for('feed.public_feed') }}" class="btn btn-outline-secondary me-2" style="font-size:0.65rem;letter-spacing:2px;">✕ CLEAR</a>
+  {% endif %}
+  <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary" style="font-size:0.65rem;letter-spacing:2px;">+ SUBMIT REPORT</a>
 </div>
 {% endif %}
 
+</div>
 {% endblock %}
+
+

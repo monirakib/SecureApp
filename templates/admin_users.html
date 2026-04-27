@@ -1,60 +1,89 @@
 {% extends "base.html" %}
-{% block title %}Manage Users - SecureApp{% endblock %}
+{% block title %}Manage Users — SecureApp{% endblock %}
 {% block content %}
-<h2 class="section-title float-in">MANAGE USERS</h2>
+<div style="max-width:1100px;margin:0 auto;padding:0.5rem 0 2rem;">
 
-<div class="card float-in float-in-delay-1">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-striped mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Joined</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td><span class="data-chip">{{ user.id }}</span></td>
-                        <td style="font-weight: 600;">{{ user.username }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>
-                            {% if user.role == 'admin' %}
-                            <span class="badge bg-warning">Admin</span>
-                            {% else %}
-                            <span class="badge bg-secondary">User</span>
-                            {% endif %}
-                        </td>
-                        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-muted);">{{ user.created_at }}</td>
-                        <td>
-                            {% if user.id != g.user.id %}
-                            <div class="btn-group btn-group-sm">
-                                <form method="POST" action="{{ url_for('admin.change_role', user_id=user.id) }}" style="display:inline">
-                                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                                    <button type="submit" class="btn btn-outline-warning btn-sm">
-                                        {% if user.role == 'admin' %}Demote{% else %}Promote{% endif %}
-                                    </button>
-                                </form>
-                                <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}"
-                                      style="display:inline" onsubmit="return confirm('Delete this user and all their data?')">
-                                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
-                                </form>
-                            </div>
-                            {% else %}
-                            <span style="color: var(--text-muted); font-size: 0.8rem; font-style: italic;">Current user</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+  {# ── HEADER ── #}
+  <div class="float-in d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:1.85rem;font-weight:900;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 28px rgba(0,240,255,0.3);line-height:1.1;">
+        <span style="opacity:0.6;">// </span>MANAGE USERS
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);letter-spacing:1px;margin-top:5px;">
+        {{ users|length }} registered accounts &nbsp;·&nbsp; access control
+      </div>
     </div>
+    <a href="{{ url_for('admin.dashboard') }}" style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;padding:9px 18px;border:1px solid rgba(0,240,255,0.25);border-radius:8px;color:var(--text-muted);text-decoration:none;transition:all .2s;"
+       onmouseover="this.style.borderColor='rgba(0,240,255,0.6)';this.style.color='var(--cyan)'" onmouseout="this.style.borderColor='rgba(0,240,255,0.25)';this.style.color='var(--text-muted)'">
+      ← COMMAND CENTER
+    </a>
+  </div>
+
+  {# ── TABLE ── #}
+  <div class="float-in float-in-delay-1" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;overflow:hidden;">
+
+    {# Header row #}
+    <div style="display:grid;grid-template-columns:60px 1fr 1fr 100px 140px 160px;gap:0;padding:11px 20px;border-bottom:1px solid rgba(0,240,255,0.15);background:rgba(0,240,255,0.04);">
+      {% for col in ['ID','USERNAME','EMAIL','ROLE','JOINED','ACTIONS'] %}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.58rem;letter-spacing:2px;color:var(--text-muted);">{{ col }}</span>
+      {% endfor %}
+    </div>
+
+    {% for user in users %}
+    <div style="display:grid;grid-template-columns:60px 1fr 1fr 100px 140px 160px;gap:0;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.04);align-items:center;transition:background .15s;"
+         onmouseover="this.style.background='rgba(0,240,255,0.03)'" onmouseout="this.style.background='transparent'">
+
+      {# ID #}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);">#{{ user.id }}</span>
+
+      {# Username #}
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:30px;height:30px;border-radius:50%;background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.2);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:0.6rem;color:var(--cyan);flex-shrink:0;">
+          {{ user.username[0]|upper }}
+        </div>
+        <span style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;font-weight:600;color:var(--text-primary);">{{ user.username }}</span>
+        {% if user.id == g.user.id %}<span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;letter-spacing:1px;padding:2px 7px;border-radius:4px;background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.25);color:var(--cyan);">YOU</span>{% endif %}
+      </div>
+
+      {# Email #}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ user.email }}</span>
+
+      {# Role #}
+      {% if user.role == 'admin' %}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:1.5px;padding:4px 10px;border-radius:5px;background:rgba(255,221,0,0.12);border:1px solid rgba(255,221,0,0.3);color:var(--yellow);width:fit-content;">ADMIN</span>
+      {% else %}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:1.5px;padding:4px 10px;border-radius:5px;background:rgba(100,100,130,0.15);border:1px solid rgba(100,100,130,0.25);color:var(--text-muted);width:fit-content;">USER</span>
+      {% endif %}
+
+      {# Joined #}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);">{{ user.created_at[:10] }}</span>
+
+      {# Actions #}
+      {% if user.id != g.user.id %}
+      <div style="display:flex;gap:6px;">
+        <form method="POST" action="{{ url_for('admin.change_role', user_id=user.id) }}" style="margin:0;">
+          <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+          <button type="submit" style="font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:1px;padding:5px 11px;border-radius:6px;background:rgba(255,221,0,0.08);border:1px solid rgba(255,221,0,0.3);color:var(--yellow);cursor:pointer;transition:all .15s;"
+                  onmouseover="this.style.background='rgba(255,221,0,0.18)'" onmouseout="this.style.background='rgba(255,221,0,0.08)'">
+            {% if user.role == 'admin' %}DEMOTE{% else %}PROMOTE{% endif %}
+          </button>
+        </form>
+        <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" style="margin:0;" onsubmit="return confirm('Delete this user and all their data?')">
+          <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+          <button type="submit" style="font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:1px;padding:5px 11px;border-radius:6px;background:rgba(255,51,51,0.08);border:1px solid rgba(255,51,51,0.3);color:var(--red);cursor:pointer;transition:all .15s;"
+                  onmouseover="this.style.background='rgba(255,51,51,0.18)'" onmouseout="this.style.background='rgba(255,51,51,0.08)'">
+            DELETE
+          </button>
+        </form>
+      </div>
+      {% else %}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text-muted);font-style:italic;">current session</span>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+
+  </div>
+
 </div>
 {% endblock %}

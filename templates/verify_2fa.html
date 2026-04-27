@@ -1,49 +1,50 @@
 {% extends "base.html" %}
-{% block title %}Two-Factor Verification - SecureApp{% endblock %}
+{% block title %}2FA Verification — SecureApp{% endblock %}
 {% block content %}
-<div class="row justify-content-center" style="margin-top: 6vh;">
-    <div class="col-md-5 col-lg-4">
-        <div class="text-center mb-4 float-in">
-            <h2 class="section-title" style="display: inline-block;">2FA VERIFY</h2>
-            <p style="color: var(--text-muted); font-size: 0.85rem; letter-spacing: 1px;">SECOND FACTOR REQUIRED</p>
-        </div>
-        <div class="card neon-card scan-line float-in float-in-delay-1">
-            <div class="card-body p-4 text-center">
+<div style="min-height:75vh;display:flex;align-items:center;justify-content:center;padding:2rem 0;">
+  <div style="width:100%;max-width:420px;">
 
-                {% if email_sent %}
-                <div class="my-3" style="padding: 1.2rem; background: rgba(0, 255, 136, 0.05); border: 1px solid rgba(0, 255, 136, 0.15); border-radius: 8px;">
-                    <div class="encrypt-badge mb-2" style="justify-content: center;"><span class="dot"></span> CODE SENT VIA EMAIL</div>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0.5rem 0 0 0;">
-                        A 6-digit verification code has been sent to<br>
-                        <strong style="color: var(--cyan); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;">{{ email_hint }}</strong>
-                    </p>
-                </div>
-                {% else %}
-                <div class="my-3" style="padding: 1.2rem; background: rgba(255, 221, 0, 0.05); border: 1px solid rgba(255, 221, 0, 0.15); border-radius: 8px;">
-                    <p style="color: var(--yellow); font-size: 0.85rem; margin: 0;">
-                        Could not send email. Check server logs or set <span class="data-chip">EMAIL_APP_PASSWORD</span> env variable.
-                    </p>
-                </div>
-                {% endif %}
-
-                <div class="mt-3" style="font-size: 0.75rem; color: var(--text-muted);">
-                    Code expires in {{ config.TWO_FA_EXPIRY_MINUTES if config else 5 }} minutes
-                </div>
-
-                <form method="POST" action="{{ url_for('auth.verify_2fa') }}" class="mt-3">
-                    <div class="mb-3">
-                        <label for="code" class="form-label">Enter Code</label>
-                        <input type="text" class="form-control form-control-lg text-center" style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; letter-spacing: 8px;"
-                               id="code" name="code" required maxlength="6" pattern="\d{6}"
-                               placeholder="000000" autocomplete="one-time-code">
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">⏎ VERIFY &amp; ACCESS</button>
-                </form>
-                <div class="mt-3" style="border-top: 1px solid var(--glass-border); padding-top: 1rem;">
-                    <a href="{{ url_for('auth.login') }}" style="font-size: 0.85rem;">← Back to Login</a>
-                </div>
-            </div>
-        </div>
+    <div class="float-in text-center mb-4">
+      <div style="font-family:'Orbitron',sans-serif;font-size:1.9rem;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;">
+        // 2FA VERIFY
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);letter-spacing:2px;margin-top:8px;">second factor required &middot; one-time code</div>
     </div>
+
+    <div class="float-in float-in-delay-1" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-top:2px solid var(--cyan);border-radius:14px;padding:28px 30px;">
+
+      {% if email_sent %}
+      <div style="background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:12px 16px;margin-bottom:20px;text-align:center;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px;">
+          <span style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;box-shadow:0 0 6px var(--green);"></span>
+          <span style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--green);">CODE SENT VIA EMAIL</span>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-muted);">verification code sent to<br><span style="color:var(--cyan);letter-spacing:1px;">{{ email_hint }}</span></div>
+      </div>
+      {% else %}
+      <div style="background:rgba(255,221,0,0.05);border:1px solid rgba(255,221,0,0.2);border-radius:8px;padding:12px 16px;margin-bottom:20px;text-align:center;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--yellow);">⚠ could not send email — check <span style="background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:3px;font-size:0.65rem;">EMAIL_APP_PASSWORD</span> env variable</div>
+      </div>
+      {% endif %}
+
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text-muted);text-align:center;margin-bottom:22px;letter-spacing:1px;">⏱ code expires in {{ config.TWO_FA_EXPIRY_MINUTES if config else 5 }} minutes</div>
+
+      <form method="POST" action="{{ url_for('auth.verify_2fa') }}">
+        <div style="margin-bottom:24px;">
+          <label style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);display:block;margin-bottom:10px;text-align:center;">ENTER 6-DIGIT CODE</label>
+          <input type="text" name="code" required maxlength="6" pattern="\d{6}" placeholder="000000"
+                 autocomplete="one-time-code"
+                 style="width:100%;background:rgba(5,5,20,0.7);border:1px solid rgba(0,240,255,0.2);border-radius:8px;padding:14px;color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:1.8rem;letter-spacing:12px;text-align:center;outline:none;transition:border-color .2s;"
+                 onfocus="this.style.borderColor='rgba(0,240,255,0.6)'" onblur="this.style.borderColor='rgba(0,240,255,0.2)'">
+        </div>
+        <button type="submit" class="btn btn-primary w-100" style="font-family:'Orbitron',sans-serif;font-size:0.72rem;letter-spacing:3px;padding:13px;">⏎ VERIFY &amp; ACCESS</button>
+      </form>
+
+      <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:20px;padding-top:16px;text-align:center;">
+        <a href="{{ url_for('auth.login') }}" style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:1.5px;color:var(--text-muted);text-decoration:none;">← BACK TO LOGIN</a>
+      </div>
+    </div>
+
+  </div>
 </div>
 {% endblock %}

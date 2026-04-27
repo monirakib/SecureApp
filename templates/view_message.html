@@ -1,65 +1,85 @@
 {% extends "base.html" %}
-{% block title %}View Message - SecureApp{% endblock %}
+{% block title %}Message — SecureApp{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <nav aria-label="breadcrumb" class="float-in">
-            <ol class="breadcrumb" style="font-size: 0.85rem;">
-                <li class="breadcrumb-item"><a href="{{ url_for('messages.inbox') }}">Inbox</a></li>
-                <li class="breadcrumb-item active" style="color: var(--text-muted);">Message</li>
-            </ol>
-        </nav>
-        <div class="card post-card float-in float-in-delay-1">
-            <div class="card-body p-4">
-                <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
-                    <div class="encrypt-badge"><span class="dot"></span> ECC E2E ENCRYPTED MESSAGE</div>
-                    {% if hmac_ok is true %}
-                    <div class="hmac-badge verified">✓ HMAC INTEGRITY VERIFIED</div>
-                    {% elif hmac_ok is false %}
-                    <div class="hmac-badge tampered">✗ INTEGRITY CHECK FAILED</div>
-                    {% else %}
-                    <div class="hmac-badge unknown">· HMAC UNVERIFIED</div>
-                    {% endif %}
-                    {% if message.expires_at %}
-                    <div class="hmac-badge unknown" style="color:var(--yellow,#ffd700);border-color:var(--yellow,#ffd700);">⏱ EXPIRES {{ message.expires_at[:10] }}</div>
-                    {% endif %}
-                </div>
-                <h2 style="font-size: 1.3rem; letter-spacing: 1px; color: var(--text-primary);">{{ message.subject }}</h2>
-                <div style="font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 1rem;">
-                    <span style="color: var(--cyan);">From:</span> {{ message.sender_name }}
-                    &middot;
-                    <span style="color: var(--cyan);">To:</span> {{ message.recipient_name }}
-                    &middot;
-                    {{ message.created_at }}
-                </div>
-                <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
-                <div class="post-content">{{ message.content | nl2br }}</div>
-                {% if documents %}
-                <div style="border-top: 1px solid var(--glass-border); margin-top: 1.2rem; padding-top: 1rem;">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 0.6rem;">ATTACHMENTS</div>
-                    {% for doc in documents %}
-                    <a href="{{ url_for('posts.download_document', doc_id=doc.id) }}"
-                       class="btn btn-outline-secondary btn-sm me-2 mb-1"
-                       style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">
-                        ⬇ {{ doc.filename }}
-                        <span style="color:var(--text-muted);margin-left:4px;">({{ (doc.file_size / 1024)|round(1) }} KB)</span>
-                    </a>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        <div class="mt-3 float-in float-in-delay-2">
-            {% if message.sender_id and message.sender_id != g.user.id %}
-            <a href="{{ url_for('messages.compose') }}?to={{ message.sender_id }}" class="btn btn-outline-primary">↩ Reply</a>
-            {% endif %}
-            <a href="{{ url_for('messages.inbox') }}" class="btn btn-outline-secondary">← Inbox</a>
-            <form method="POST" action="{{ url_for('messages.delete_message', msg_id=message.id) }}"
-                  style="display:inline" onsubmit="return confirm('Delete this message?')">
-                <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
-            </form>
-        </div>
+<div style="max-width:720px;margin:0 auto;">
+
+  {# breadcrumb #}
+  <div class="float-in" style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);margin-bottom:20px;letter-spacing:1px;">
+    <a href="{{ url_for('messages.inbox') }}" style="color:var(--cyan);text-decoration:none;">INBOX</a>
+    <span style="margin:0 8px;opacity:0.4;">/</span>
+    <span>MESSAGE</span>
+  </div>
+
+  <div class="float-in float-in-delay-1" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-top:2px solid var(--cyan);border-radius:14px;padding:28px 30px;margin-bottom:16px;">
+
+    {# badges #}
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:20px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:1px;color:var(--green);background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:4px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px;">
+        <span style="width:5px;height:5px;background:var(--green);border-radius:50%;display:inline-block;"></span> ECC E2E ENCRYPTED
+      </span>
+      {% if hmac_ok is true %}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:1px;color:var(--green);background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:4px;padding:3px 10px;">✓ HMAC VERIFIED</span>
+      {% elif hmac_ok is false %}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:1px;color:var(--red);background:rgba(255,51,51,0.08);border:1px solid rgba(255,51,51,0.3);border-radius:4px;padding:3px 10px;">✗ INTEGRITY FAILED</span>
+      {% else %}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:1px;color:var(--text-muted);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:3px 10px;">&middot; HMAC UNVERIFIED</span>
+      {% endif %}
+      {% if message.expires_at %}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:1px;color:var(--yellow);background:rgba(255,221,0,0.06);border:1px solid rgba(255,221,0,0.2);border-radius:4px;padding:3px 10px;">⏱ EXPIRES {{ message.expires_at[:10] }}</span>
+      {% endif %}
     </div>
+
+    {# subject #}
+    <div style="font-family:'Rajdhani',sans-serif;font-size:1.4rem;font-weight:700;color:var(--text-primary);margin-bottom:14px;">{{ message.subject }}</div>
+
+    {# meta #}
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
+      <span><span style="color:var(--cyan);">FROM</span>&nbsp; {{ message.sender_name }}</span>
+      <span><span style="color:var(--cyan);">TO</span>&nbsp; {{ message.recipient_name }}</span>
+      <span>{{ message.created_at }}</span>
+    </div>
+
+    <div style="border-top:1px solid rgba(255,255,255,0.06);margin-bottom:20px;"></div>
+
+    {# content #}
+    <div style="font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--text-secondary);line-height:1.8;white-space:pre-wrap;">{{ message.content | nl2br }}</div>
+
+    {# attachments #}
+    {% if documents %}
+    <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:22px;padding-top:18px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px;">ATTACHMENTS</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        {% for doc in documents %}
+        <a href="{{ url_for('posts.download_document', doc_id=doc.id) }}"
+           style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;padding:7px 14px;border:1px solid rgba(0,240,255,0.25);border-radius:5px;color:var(--cyan);text-decoration:none;display:flex;align-items:center;gap:6px;transition:background .2s;"
+           onmouseenter="this.style.background='rgba(0,240,255,0.08)'" onmouseleave="this.style.background='transparent'">
+          ⬇ {{ doc.filename }} <span style="color:var(--text-muted);">({{ (doc.file_size / 1024)|round(1) }} KB)</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  {# actions #}
+  <div class="float-in float-in-delay-2" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    {% if message.sender_id and message.sender_id != g.user.id %}
+    <a href="{{ url_for('messages.compose') }}?to={{ message.sender_id }}"
+       style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:1.5px;padding:8px 18px;border:1px solid rgba(0,240,255,0.35);border-radius:5px;color:var(--cyan);text-decoration:none;transition:background .2s;"
+       onmouseenter="this.style.background='rgba(0,240,255,0.1)'" onmouseleave="this.style.background='transparent'">↩ REPLY</a>
+    {% endif %}
+    <a href="{{ url_for('messages.inbox') }}"
+       style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:1.5px;padding:8px 18px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;color:var(--text-muted);text-decoration:none;transition:background .2s;"
+       onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">← INBOX</a>
+    <form method="POST" action="{{ url_for('messages.delete_message', msg_id=message.id) }}"
+          style="display:inline" onsubmit="return confirm('Delete this message?')">
+      <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+      <button type="submit"
+              style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:1.5px;padding:8px 18px;border:1px solid rgba(255,0,102,0.35);border-radius:5px;color:var(--pink);background:transparent;cursor:pointer;transition:background .2s;"
+              onmouseenter="this.style.background='rgba(255,0,102,0.1)'" onmouseleave="this.style.background='transparent'">DELETE</button>
+    </form>
+  </div>
+
 </div>
 {% endblock %}

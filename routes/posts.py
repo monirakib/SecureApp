@@ -164,7 +164,31 @@ def view_post(post_id):
     # Reactions
     reactions = db.get_post_reactions(post_id)
 
-    return render_template('view_post.html', post=decrypted, hmac_ok=hmac_ok, reactions=reactions)
+    # Comments (decrypt each with post owner's ECC key)
+    raw_comments = db.get_post_comments(post_id)
+    comments = []
+    for c in raw_comments:
+        try:
+            text = ecc_decrypt_string(c['content_enc'], priv)
+        except Exception:
+            text = '[Could not decrypt]'
+        name = c['commenter_codename'] if c['is_anonymous'] else None
+        if not name and c['user_id']:
+            commenter = db.get_user_by_id(c['user_id'])
+            try:
+                name = key_manager.decrypt_user_data(commenter['username_enc']) if commenter else 'Unknown'
+            except Exception:
+                name = 'Unknown'
+        comments.append({
+            'id': c['id'],
+            'text': text,
+            'name': name or 'Unknown',
+            'is_anonymous': c['is_anonymous'],
+            'created_at': c['created_at'],
+        })
+
+    return render_template('view_post.html', post=decrypted, hmac_ok=hmac_ok,
+                           reactions=reactions, comments=comments)
 
 
 @posts_bp.route('/posts/<int:post_id>/edit', methods=['GET', 'POST'])
@@ -227,6 +251,55 @@ def delete_post(post_id):
     db.delete_post(post_id)
     flash('Post deleted.', 'info')
     return redirect(url_for('posts.my_posts'))
+
+
+@posts_bp.route('/posts/<int:post_id>/comment', methods=['POST'])
+@login_required
+def add_comment(post_id):
+    """Add an encrypted comment (anonymous or named) to a post thread."""
+    csrf = request.form.get('csrf_token', '')
+    if csrf != g.csrf_token:
+        abort(403)
+
+    content = request.form.get('content', '').strip()
+    if not content:
+        flash('Comment cannot be empty.', 'danger')
+        return redirect(url_for('posts.view_post', post_id=post_id))
+
+    if len(content) > 2000:
+        flash('Comment is too long (max 2000 characters).', 'danger')
+        return redirect(url_for('posts.view_post', post_id=post_id))
+
+    is_anonymous = 1 if request.form.get('anonymous') == '1' else 0
+    commenter_codename = generate_codename() if is_anonymous else ''
+
+    # Encrypt with post owner's ECC public key so the server can always decrypt
+    post = db.get_post_by_id(post_id)
+    if not post:
+        abort(404)
+    owner = db.get_user_by_id(post['user_id'])
+    if not owner:
+        abort(404)
+    pub, _ = _get_user_ecc_keys(owner)
+    content_enc = ecc_encrypt_string(content, pub)
+
+    # HMAC over encrypted content for integrity
+    data_hmac = key_manager.compute_data_hmac(content_enc, str(post_id))
+
+    db.create_post_comment(
+        post_id=post_id,
+        user_id=g.user['id'],
+        content_enc=content_enc,
+        is_anonymous=is_anonymous,
+        commenter_codename=commenter_codename,
+        data_hmac=data_hmac
+    )
+
+    db.create_audit_log(g.user['id'], 'comment_added',
+                        f'Comment on post #{post_id}', request.remote_addr)
+
+    flash('Reply transmitted.', 'success')
+    return redirect(url_for('posts.view_post', post_id=post_id) + '#thread')
 
 
 @posts_bp.route('/posts/<int:post_id>/react', methods=['POST'])

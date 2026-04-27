@@ -38,6 +38,37 @@ def view_profile():
     except Exception:
         key_fingerprint = 'N/A'
 
+    # Post count for this user
+    user_posts = db.get_posts_by_user(user['id'])
+    post_count = len(user_posts)
+
+    # Format join date nicely
+    try:
+        joined_fmt = user['created_at'][:10].replace('-', '.')
+    except Exception:
+        joined_fmt = user['created_at']
+
+    # Recent activity: last 4 posts as activity items
+    recent_activity = []
+    for p in user_posts[:4]:
+        recent_activity.append({
+            'type': 'POST',
+            'title_enc': p['title_enc'],
+            'created_at': p.get('created_at', ''),
+            'category': p.get('category', 'other'),
+            'urgency': p.get('urgency', 'medium'),
+            'id': p['id'],
+        })
+
+    # Decrypt activity titles
+    from crypto.ecc import ecc_decrypt_string, deserialize_ecc_public_key
+    priv = key_manager.decrypt_user_ecc_private_key(user['ecc_private_key_enc'])
+    for item in recent_activity:
+        try:
+            item['title'] = ecc_decrypt_string(item['title_enc'], priv)
+        except Exception:
+            item['title'] = '[Encrypted]'
+
     profile = {
         'id': user['id'],
         'username': username,
@@ -45,10 +76,13 @@ def view_profile():
         'phone': phone,
         'role': user['role'],
         'created_at': user['created_at'],
-        'key_fingerprint': key_fingerprint
+        'joined_fmt': joined_fmt,
+        'key_fingerprint': key_fingerprint,
+        'post_count': post_count,
+        'unread_messages': db.count_unread_messages(user['id']),
     }
 
-    return render_template('profile.html', profile=profile)
+    return render_template('profile.html', profile=profile, recent_activity=recent_activity)
 
 
 @profile_bp.route('/profile/edit', methods=['GET', 'POST'])

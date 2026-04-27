@@ -1,75 +1,103 @@
 {% extends "base.html" %}
-{% block title %}View Tip - SecureApp{% endblock %}
+{% block title %}View Tip — SecureApp{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <nav aria-label="breadcrumb" class="float-in">
-            <ol class="breadcrumb" style="font-size: 0.85rem;">
-                <li class="breadcrumb-item"><a href="{{ url_for('tips.manage_tips') }}">Tips</a></li>
-                <li class="breadcrumb-item active" style="color: var(--text-muted);">Tip #{{ tip.id }}</li>
-            </ol>
-        </nav>
-        <div class="card post-card float-in float-in-delay-1">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <span class="category-badge category-{{ tip.category }}">{{ tip.category|upper }}</span>
-                        <span class="urgency-badge urgency-{{ tip.urgency }}">{{ tip.urgency|upper }}</span>
-                    </div>
-                    <span class="status-badge status-{{ tip.status }}">{{ tip.status|upper }}</span>
-                </div>
-                <div class="encrypt-badge mb-3"><span class="dot"></span> DECRYPTED FROM RSA STORAGE</div>
-                <h2 style="font-size: 1.3rem; letter-spacing: 1px;">{{ tip.title }}</h2>
-                <p style="color: var(--text-muted); font-size: 0.78rem; font-family: 'JetBrains Mono', monospace;">
-                    <span style="color: var(--purple);">⬡ {{ tip.codename }}</span> &middot; {{ tip.created_at }}
-                </p>
-                <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
-                <div class="post-content">{{ tip.content | nl2br }}</div>
 
-                {% if tip.documents %}
-                <div style="border-top: 1px solid var(--glass-border); margin: 1rem 0;"></div>
-                <h6 style="font-family: 'Orbitron', sans-serif; font-size: 0.7rem; letter-spacing: 2px; color: var(--text-muted);">ATTACHED DOCUMENTS</h6>
-                {% for doc in tip.documents %}
-                <a href="{{ url_for('posts.download_document', doc_id=doc.id) }}" class="btn btn-outline-primary btn-sm me-2 mb-1">
-                    📎 {{ doc.filename }} ({{ (doc.file_size / 1024)|int }}KB)
-                </a>
-                {% endfor %}
-                {% endif %}
-            </div>
-        </div>
+{% set urg_colors = {'critical':'var(--red)','high':'var(--pink)','medium':'var(--yellow)','low':'var(--green)'} %}
+{% set cat_colors = {'corruption':'var(--red)','fraud':'var(--pink)','safety':'var(--yellow)','environment':'var(--green)','other':'var(--text-muted)'} %}
+{% set st_colors  = {'new':'var(--cyan)','reviewing':'var(--yellow)','resolved':'var(--green)','dismissed':'var(--text-muted)'} %}
 
-        <div class="card mt-3 float-in float-in-delay-2">
-            <div class="card-header">ADMIN ACTIONS</div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('tips.update_tip_status', tip_id=tip.id) }}">
-                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-select">
-                                {% for s in ['new', 'reviewing', 'resolved', 'dismissed'] %}
-                                <option value="{{ s }}" {{ 'selected' if tip.status == s }}>{{ s|capitalize }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-8 mb-3">
-                            <label class="form-label">Admin Notes</label>
-                            <textarea name="admin_notes" class="form-control" rows="2">{{ tip.admin_notes }}</textarea>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-sm">Update Status</button>
-                </form>
-            </div>
-        </div>
+<div style="max-width:760px;margin:0 auto;">
 
-        <div class="mt-3 float-in float-in-delay-3">
-            <a href="{{ url_for('tips.manage_tips') }}" class="btn btn-outline-secondary">← Back to Tips</a>
-            <form method="POST" action="{{ url_for('tips.delete_tip', tip_id=tip.id) }}"
-                  style="display:inline" onsubmit="return confirm('Delete this tip permanently?')">
-                <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                <button type="submit" class="btn btn-outline-danger btn-sm">Delete Tip</button>
-            </form>
-        </div>
+  {# breadcrumb #}
+  <div class="float-in" style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);margin-bottom:20px;letter-spacing:1px;">
+    <a href="{{ url_for('tips.manage_tips') }}" style="color:var(--cyan);text-decoration:none;">TIPS</a>
+    <span style="margin:0 8px;opacity:0.4;">/</span>
+    <span>TIP #{{ tip.id }}</span>
+  </div>
+
+  {# main card #}
+  <div class="float-in float-in-delay-1" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-top:2px solid var(--purple);border-radius:14px;padding:28px 30px;margin-bottom:16px;">
+
+    {# badges #}
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:18px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:1px;color:var(--purple);background:rgba(180,0,255,0.08);border:1px solid rgba(180,0,255,0.2);border-radius:4px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px;">
+        <span style="width:5px;height:5px;background:var(--purple);border-radius:50%;display:inline-block;"></span> DECRYPTED FROM RSA STORAGE
+      </span>
+      {% set cat = tip.category %}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:1px;color:{{ cat_colors.get(cat,'var(--text-muted)') }};background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:3px 10px;">{{ cat|upper }}</span>
+      {% set urg = tip.urgency %}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:1px;color:{{ urg_colors.get(urg,'var(--yellow)') }};background:rgba(255,255,255,0.04);border:1px solid {{ urg_colors.get(urg,'var(--yellow)') }};border-radius:4px;padding:3px 10px;">{{ urg|upper }}</span>
+      {% set st = tip.status %}
+      <span style="margin-left:auto;font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:1px;color:{{ st_colors.get(st,'var(--cyan)') }};background:rgba(255,255,255,0.04);border:1px solid {{ st_colors.get(st,'var(--cyan)') }};border-radius:4px;padding:3px 10px;">{{ st|upper }}</span>
     </div>
+
+    <div style="font-family:'Rajdhani',sans-serif;font-size:1.4rem;font-weight:700;color:var(--text-primary);margin-bottom:10px;">{{ tip.title }}</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);margin-bottom:20px;">
+      <span style="color:var(--purple);">⬡ {{ tip.codename }}</span> &nbsp;&middot;&nbsp; {{ tip.created_at }}
+    </div>
+
+    <div style="border-top:1px solid rgba(255,255,255,0.06);margin-bottom:20px;"></div>
+
+    <div style="font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--text-secondary);line-height:1.8;white-space:pre-wrap;">{{ tip.content | nl2br }}</div>
+
+    {% if tip.documents %}
+    <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:22px;padding-top:18px;">
+      <div style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px;">ATTACHED DOCUMENTS</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        {% for doc in tip.documents %}
+        <a href="{{ url_for('posts.download_document', doc_id=doc.id) }}"
+           style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;padding:7px 14px;border:1px solid rgba(0,240,255,0.25);border-radius:5px;color:var(--cyan);text-decoration:none;transition:background .2s;"
+           onmouseenter="this.style.background='rgba(0,240,255,0.08)'" onmouseleave="this.style.background='transparent'">
+          📎 {{ doc.filename }} <span style="color:var(--text-muted);">({{ (doc.file_size / 1024)|int }}KB)</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  {# admin actions #}
+  <div class="float-in float-in-delay-2" style="background:var(--glass-bg);border:1px solid rgba(180,0,255,0.15);border-left:3px solid var(--purple);border-radius:12px;padding:22px 26px;margin-bottom:16px;">
+    <div style="font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:2px;color:var(--purple);margin-bottom:18px;">ADMIN ACTIONS</div>
+    <form method="POST" action="{{ url_for('tips.update_tip_status', tip_id=tip.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+      <div style="display:grid;grid-template-columns:160px 1fr;gap:16px;align-items:start;">
+        <div>
+          <label style="font-family:'Orbitron',sans-serif;font-size:0.58rem;letter-spacing:1.5px;color:var(--text-muted);display:block;margin-bottom:7px;">STATUS</label>
+          <select name="status"
+                  style="width:100%;background:rgba(5,5,20,0.8);border:1px solid rgba(180,0,255,0.2);border-radius:7px;padding:9px 12px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.8rem;outline:none;">
+            {% for s in ['new', 'reviewing', 'resolved', 'dismissed'] %}
+            <option value="{{ s }}" {{ 'selected' if tip.status == s }}>{{ s|capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-family:'Orbitron',sans-serif;font-size:0.58rem;letter-spacing:1.5px;color:var(--text-muted);display:block;margin-bottom:7px;">ADMIN NOTES</label>
+          <textarea name="admin_notes" rows="2"
+                    style="width:100%;background:rgba(5,5,20,0.8);border:1px solid rgba(180,0,255,0.2);border-radius:7px;padding:9px 12px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.8rem;outline:none;resize:vertical;">{{ tip.admin_notes }}</textarea>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary"
+              style="font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:2px;padding:9px 20px;margin-top:14px;background:linear-gradient(135deg,rgba(180,0,255,0.25),rgba(0,240,255,0.15));border-color:rgba(180,0,255,0.5);">
+        UPDATE STATUS
+      </button>
+    </form>
+  </div>
+
+  {# back / delete #}
+  <div class="float-in float-in-delay-3" style="display:flex;align-items:center;gap:8px;">
+    <a href="{{ url_for('tips.manage_tips') }}"
+       style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:1.5px;padding:8px 18px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;color:var(--text-muted);text-decoration:none;transition:background .2s;"
+       onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">← BACK TO TIPS</a>
+    <form method="POST" action="{{ url_for('tips.delete_tip', tip_id=tip.id) }}"
+          style="display:inline" onsubmit="return confirm('Delete this tip permanently?')">
+      <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+      <button type="submit"
+              style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:1.5px;padding:8px 18px;border:1px solid rgba(255,0,102,0.35);border-radius:5px;color:var(--pink);background:transparent;cursor:pointer;transition:background .2s;"
+              onmouseenter="this.style.background='rgba(255,0,102,0.1)'" onmouseleave="this.style.background='transparent'">DELETE TIP</button>
+    </form>
+  </div>
+
 </div>
 {% endblock %}

@@ -1,73 +1,153 @@
 {% extends "base.html" %}
-{% block title %}Compose Message - SecureApp{% endblock %}
+{% block title %}Compose Message — SecureApp{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <h2 class="section-title float-in">COMPOSE SECURE MESSAGE</h2>
-        <div class="card neon-card float-in float-in-delay-1">
-            <div class="card-body p-4">
-                <form method="POST" action="{{ url_for('messages.compose') }}" enctype="multipart/form-data">
-                    <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                    <div class="mb-3">
-                        <label for="recipient_id" class="form-label">Recipient</label>
-                        {% if users %}
-                        <select class="form-select" id="recipient_id" name="recipient_id" required>
-                            <option value="">Select recipient...</option>
-                            {% for user in users %}
-                            <option value="{{ user.id }}" {% if selected_id == user.id %}selected{% endif %}>{{ user.username }}</option>
-                            {% endfor %}
-                        </select>
-                        {% else %}
-                        <div class="alert alert-warning" style="font-size:0.85rem;">
-                            You have no friends yet. <a href="{{ url_for('friends.friends_page') }}">Add friends</a> before you can send messages.
-                        </div>
-                        <select class="form-select" id="recipient_id" name="recipient_id" disabled>
-                            <option value="">No friends available</option>
-                        </select>
-                        {% endif %}
-                    </div>
-                    <div class="mb-3">
-                        <label for="subject" class="form-label">Subject</label>
-                        <input type="text" class="form-control" id="subject" name="subject"
-                               required maxlength="200" placeholder="Message subject...">
-                    </div>
-                    <div class="mb-3">
-                        <label for="content" class="form-label">Message <span id="content-count" style="color:var(--text-muted);font-size:0.78rem;float:right;">0 chars</span></label>
-                        <textarea class="form-control" id="content" name="content"
-                                  rows="6" required placeholder="Write your encrypted message..."
-                                  oninput="document.getElementById('content-count').textContent=this.value.length+' chars'"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="expiry_hours" class="form-label">Message Expiry</label>
-                        <select class="form-select" id="expiry_hours" name="expiry_hours">
-                            <option value="">Never expire</option>
-                            <option value="24">24 hours</option>
-                            <option value="72">3 days</option>
-                            <option value="168">7 days</option>
-                        </select>
-                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;">Expired messages are automatically removed from the inbox</div>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="anonymous" name="anonymous" value="1">
-                        <label class="form-check-label" for="anonymous" style="color: var(--text-secondary);">
-                            Send anonymously (recipient won't see your identity)
-                        </label>
-                    </div>
-                    <div class="mb-3">
-                        <label for="document" class="form-label">Attachment <span style="color:var(--text-muted);font-size:0.8rem;">(optional, max 2 MB)</span></label>
-                        <input type="file" class="form-control" id="document" name="document">
-                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;">File will be RSA-encrypted before storage</div>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">⬡ ENCRYPT & SEND</button>
-                        <a href="{{ url_for('messages.inbox') }}" class="btn btn-outline-secondary">Cancel</a>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div class="mt-3 float-in float-in-delay-2">
-            <div class="encrypt-badge"><span class="dot"></span> MESSAGE WILL BE RSA ENCRYPTED AT REST</div>
-        </div>
+<div style="max-width:680px;margin:0 auto;padding:1.5rem 0;">
+
+  {# ── HEADING ── #}
+  <div class="float-in mb-4">
+    <div style="font-family:'Orbitron',sans-serif;font-size:1.9rem;font-weight:900;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 30px rgba(0,240,255,0.35);line-height:1.1;">
+      <span style="opacity:0.7;">// </span>COMPOSE MESSAGE
     </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);letter-spacing:1px;margin-top:6px;">
+      onion-routed · end-to-end encrypted
+    </div>
+  </div>
+
+  {# ── FORM CARD ── #}
+  <div class="compose-card float-in float-in-delay-1">
+
+    {# Session key banner #}
+    <div style="background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:10px;margin-bottom:24px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--green);letter-spacing:1.5px;">
+        SESSION ENCRYPTED · KEY 0x4f7a...e21b
+      </span>
+    </div>
+
+    <form method="POST" action="{{ url_for('messages.compose') }}" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+
+      {# RECIPIENT #}
+      <div class="compose-field">
+        <label class="compose-label">RECIPIENT</label>
+        {% if users %}
+        <select class="compose-input" name="recipient_id" required style="cursor:pointer;">
+          <option value="" disabled selected style="color:#666;">@operator_handle or onion address</option>
+          {% for user in users %}
+          <option value="{{ user.id }}" {% if selected_id == user.id %}selected{% endif %}
+                  style="background:#0e0e1f;color:var(--text-primary);">
+            @{{ user.username }}
+          </option>
+          {% endfor %}
+        </select>
+        {% else %}
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--red);padding:10px 14px;border:1px solid rgba(255,51,51,0.25);border-radius:8px;background:rgba(255,51,51,0.06);">
+          No friends yet — <a href="{{ url_for('friends.friends_page') }}" style="color:var(--cyan);">add friends</a> before messaging.
+        </div>
+        {% endif %}
+      </div>
+
+      {# SUBJECT #}
+      <div class="compose-field">
+        <label class="compose-label">SUBJECT</label>
+        <input type="text" name="subject" class="compose-input"
+               maxlength="200" placeholder="Optional · leave blank for ghost mode"
+               {% if not users %}disabled{% endif %}>
+      </div>
+
+      {# PRIORITY pills #}
+      <div class="compose-field">
+        <label class="compose-label">PRIORITY</label>
+        <div class="compose-pill-row">
+          {% for lbl, col, bg in [
+            ('NORMAL','#00f0ff','rgba(0,240,255,0.12)'),
+            ('URGENT','#ffd700','rgba(255,215,0,0.12)'),
+            ('CRITICAL','var(--red)','rgba(255,51,51,0.15)')
+          ] %}
+          <label class="compose-pill-label">
+            <input type="radio" name="priority" value="{{ lbl|lower }}" class="compose-pill-input"
+                   {% if lbl == 'NORMAL' %}checked{% endif %}>
+            <span class="compose-pill" style="--pill-color:{{ col }};--pill-bg:{{ bg }};">{{ lbl }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# MESSAGE #}
+      <div class="compose-field">
+        <label class="compose-label">
+          MESSAGE
+          <span id="content-count" style="float:right;font-size:0.6rem;color:var(--text-muted);font-weight:400;letter-spacing:1px;">0 / 5000</span>
+        </label>
+        <textarea name="content" class="compose-textarea" rows="9" required
+                  placeholder="// type your encrypted message..."
+                  oninput="document.getElementById('content-count').textContent=this.value.length+' / 5000'"
+                  {% if not users %}disabled{% endif %}></textarea>
+      </div>
+
+      {# AUTO-DESTRUCT #}
+      <div class="compose-field">
+        <label class="compose-label">AUTO-DESTRUCT</label>
+        <select name="expiry_hours" class="compose-input" style="cursor:pointer;">
+          <option value="" style="background:#0e0e1f;">Never</option>
+          <option value="5" style="background:#0e0e1f;">5 minutes after read</option>
+          <option value="24" style="background:#0e0e1f;">24 hours</option>
+          <option value="72" style="background:#0e0e1f;">3 days</option>
+          <option value="168" style="background:#0e0e1f;">7 days</option>
+        </select>
+      </div>
+
+      {# ATTACHMENT (hidden until toggled) #}
+      <div class="compose-field" id="attach-section" style="display:none;">
+        <label class="compose-label">ATTACHMENT</label>
+        <input type="file" name="document" class="compose-input" id="document" style="padding:10px 14px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text-muted);margin-top:6px;letter-spacing:0.5px;">max 2MB · RSA encrypted before storage</div>
+      </div>
+
+      {# ANONYMOUS toggle #}
+      <div class="compose-field" style="margin-bottom:8px;">
+        <label class="compose-id-option" style="cursor:pointer;display:inline-flex;align-items:center;gap:10px;">
+          <input type="checkbox" name="anonymous" value="1" style="accent-color:#d966ff;width:15px;height:15px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#d966ff;">⬡ SEND ANONYMOUSLY</span>
+          <span style="font-size:0.65rem;color:var(--text-muted);">(recipient won't see your identity)</span>
+        </label>
+      </div>
+
+      {# ACTION BAR #}
+      <div class="compose-action-bar">
+        <button type="button" class="compose-action-btn" onclick="toggleAttach()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+          ATTACH
+        </button>
+        <span class="compose-action-btn" style="cursor:default;opacity:0.5;" title="ECC encrypted">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          SIGN
+        </span>
+      </div>
+
+      {# SUBMIT ROW #}
+      <div class="compose-submit-row">
+        <a href="{{ url_for('messages.inbox') }}" class="compose-discard-btn">DISCARD</a>
+        <button type="submit" class="compose-broadcast-btn" {% if not users %}disabled style="opacity:0.4;cursor:not-allowed;"{% endif %}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          TRANSMIT
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <div class="encrypt-badge float-in float-in-delay-2 mt-3">
+    <span class="dot"></span> ECC ELGAMAL E2E · HMAC-SHA256 · RSA-1024 ATTACHMENTS
+  </div>
+
 </div>
+
+<script>
+function toggleAttach() {
+  var s = document.getElementById('attach-section');
+  s.style.display = s.style.display === 'none' ? 'block' : 'none';
+}
+</script>
 {% endblock %}
+

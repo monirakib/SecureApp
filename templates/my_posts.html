@@ -1,60 +1,99 @@
 {% extends "base.html" %}
-{% block title %}My Reports - SecureApp{% endblock %}
+{% block title %}My Reports — SecureApp{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4 float-in">
-    <h2 class="section-title mb-0">MY REPORTS</h2>
-    <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary">+ NEW REPORT</a>
+
+{# ── urgency / category color maps ── #}
+{% set urg_colors = {'critical':'var(--red)','high':'var(--pink)','medium':'var(--yellow)','low':'var(--green)'} %}
+{% set cat_colors = {'corruption':'var(--red)','fraud':'var(--pink)','safety':'var(--yellow)','environment':'var(--green)','other':'var(--text-muted)'} %}
+{% set st_colors  = {'new':'var(--cyan)','under_review':'var(--yellow)','resolved':'var(--green)','closed':'var(--text-muted)'} %}
+
+{# ── HEADER ROW ── #}
+<div class="float-in d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:1.85rem;font-weight:900;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 28px rgba(0,240,255,0.3);line-height:1.1;">
+      <span style="opacity:0.6;">// </span>MY REPORTS
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);letter-spacing:1px;margin-top:5px;">
+      {{ posts|length }} report{{ 's' if posts|length != 1 else '' }}
+    </div>
+  </div>
+  <a href="{{ url_for('posts.create_post') }}"
+     class="btn btn-primary float-in float-in-delay-1"
+     style="font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:2px;padding:10px 22px;">
+    + NEW REPORT
+  </a>
 </div>
 
 {% if posts %}
-<div class="row">
-    {% for post in posts %}
-    <div class="col-md-6 mb-3 float-in float-in-delay-{{ loop.index0 % 4 + 1 }}">
-        <div class="card post-card h-100">
-            <div class="card-body">
-                {% if not post.integrity_ok %}
-                <span class="badge bg-danger mb-2">INTEGRITY CHECK FAILED</span>
-                {% else %}
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                        <div class="encrypt-badge" style="display: inline-flex;"><span class="dot"></span> ECC ENCRYPTED</div>
-                        {% if post.get('is_anonymous') %}<span class="badge bg-secondary ms-1" style="font-size: 0.6rem;">ANON</span>{% endif %}
-                    </div>
-                    {% if post.get('urgency') %}
-                    <span class="urgency-badge urgency-{{ post.get('urgency', 'medium') }}" style="font-size: 0.6rem;">{{ post.get('urgency', 'medium')|upper }}</span>
-                    {% endif %}
-                </div>
-                {% if post.get('category') %}
-                <span class="category-badge category-{{ post.get('category', 'other') }}" style="font-size: 0.6rem;">{{ post.get('category', 'other')|upper }}</span>
-                {% endif %}
-                {% set st = post.get('status', 'new') %}
-                <span class="status-badge status-{{ st }}" style="font-size:0.6rem;">{{ st|upper }}</span>
-                {% endif %}
-                <h5 class="card-title mt-2">{{ post.title }}</h5>
-                <p style="color: var(--text-muted); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace;">
-                    {{ post.created_at }}
-                    {% if post.updated_at %}<br>edited {{ post.updated_at }}{% endif %}
-                </p>
-                <div class="btn-group btn-group-sm">
-                    <a href="{{ url_for('posts.view_post', post_id=post.id) }}" class="btn btn-outline-primary">View</a>
-                    <a href="{{ url_for('posts.edit_post', post_id=post.id) }}" class="btn btn-outline-secondary">Edit</a>
-                    <form method="POST" action="{{ url_for('posts.delete_post', post_id=post.id) }}"
-                          style="display:inline" onsubmit="return confirm('Delete this report?')">
-                        <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
-                        <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+<div style="display:flex;flex-direction:column;gap:14px;">
+  {% for post in posts %}
+  <div class="float-in float-in-delay-{{ loop.index0 % 4 + 1 }}"
+       style="background:var(--glass-bg);border:1px solid var(--glass-border);border-left:3px solid {% if not post.integrity_ok %}var(--red){% else %}{{ urg_colors.get(post.get('urgency','medium'), 'var(--cyan)') }}{% endif %};border-radius:10px;padding:18px 22px;transition:border-color .2s;"
+       onmouseenter="this.style.borderColor='rgba(0,240,255,0.35)'" onmouseleave="this.style.borderColor='var(--glass-border)'">
+
+    {% if not post.integrity_ok %}
+    {# ── integrity failure ── #}
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:1.5px;color:var(--red);background:rgba(255,51,51,0.12);border:1px solid rgba(255,51,51,0.3);border-radius:4px;padding:2px 8px;">⚠ INTEGRITY CHECK FAILED</span>
     </div>
-    {% endfor %}
+    {% else %}
+    {# ── badges row ── #}
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-bottom:12px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:1px;color:var(--green);background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:4px;padding:2px 8px;display:inline-flex;align-items:center;gap:5px;">
+        <span style="width:5px;height:5px;background:var(--green);border-radius:50%;display:inline-block;"></span> ECC ENCRYPTED
+      </span>
+      {% if post.get('is_anonymous') %}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:1px;color:var(--text-muted);background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:2px 8px;">ANON</span>
+      {% endif %}
+      {% if post.get('category') %}
+      {% set cat = post.get('category','other') %}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:1px;color:{{ cat_colors.get(cat,'var(--text-muted)') }};background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:2px 8px;">{{ cat|upper }}</span>
+      {% endif %}
+      {% set st = post.get('status','new') %}
+      <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:1px;color:{{ st_colors.get(st,'var(--cyan)') }};background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:2px 8px;">{{ st|upper }}</span>
+      {# urgency pushed to far right #}
+      {% if post.get('urgency') %}
+      {% set urg = post.get('urgency','medium') %}
+      <span style="margin-left:auto;font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:1.5px;color:{{ urg_colors.get(urg,'var(--yellow)') }};background:rgba(255,255,255,0.04);border:1px solid {{ urg_colors.get(urg,'var(--yellow)') }};border-radius:4px;padding:2px 10px;">{{ urg|upper }}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# ── title + date ── #}
+    <div style="font-family:'Rajdhani',sans-serif;font-size:1.05rem;font-weight:600;color:var(--text-primary);margin-bottom:4px;">{{ post.title }}</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-muted);">
+      {{ post.created_at }}{% if post.updated_at %} &nbsp;·&nbsp; edited {{ post.updated_at }}{% endif %}
+    </div>
+
+    {# ── actions ── #}
+    <div style="display:flex;align-items:center;gap:8px;margin-top:14px;">
+      <a href="{{ url_for('posts.view_post', post_id=post.id) }}"
+         style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:1.5px;padding:6px 16px;border:1px solid rgba(0,240,255,0.35);border-radius:5px;color:var(--cyan);text-decoration:none;transition:background .2s;"
+         onmouseenter="this.style.background='rgba(0,240,255,0.1)'" onmouseleave="this.style.background='transparent'">VIEW</a>
+      <a href="{{ url_for('posts.edit_post', post_id=post.id) }}"
+         style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:1.5px;padding:6px 16px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;color:var(--text-muted);text-decoration:none;transition:background .2s;"
+         onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">EDIT</a>
+      <form method="POST" action="{{ url_for('posts.delete_post', post_id=post.id) }}"
+            style="display:inline" onsubmit="return confirm('Delete this report?')">
+        <input type="hidden" name="csrf_token" value="{{ g.csrf_token }}">
+        <button type="submit"
+                style="font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:1.5px;padding:6px 16px;border:1px solid rgba(255,0,102,0.35);border-radius:5px;color:var(--pink);background:transparent;cursor:pointer;transition:background .2s;"
+                onmouseenter="this.style.background='rgba(255,0,102,0.1)'" onmouseleave="this.style.background='transparent'">DELETE</button>
+      </form>
+    </div>
+
+  </div>
+  {% endfor %}
 </div>
+
 {% else %}
-<div class="text-center float-in float-in-delay-1" style="margin-top: 10vh;">
-    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;">◈</div>
-    <h5 style="font-family: 'Orbitron', sans-serif; letter-spacing: 2px; color: var(--text-muted);">NO REPORTS YET</h5>
-    <p style="color: var(--text-muted);">Submit your first encrypted whistleblower report</p>
-    <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary">+ SUBMIT REPORT</a>
+{# ── empty state ── #}
+<div class="float-in float-in-delay-1 text-center" style="margin-top:12vh;">
+  <div style="font-size:2.5rem;opacity:0.2;margin-bottom:16px;">◈</div>
+  <div style="font-family:'Orbitron',sans-serif;font-size:0.85rem;letter-spacing:3px;color:var(--text-muted);margin-bottom:8px;">NO REPORTS YET</div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text-muted);margin-bottom:24px;">submit your first encrypted whistleblower report</div>
+  <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary" style="font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:2px;">+ SUBMIT REPORT</a>
 </div>
 {% endif %}
+
 {% endblock %}
