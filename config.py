@@ -7,7 +7,7 @@ KEYS_DIR = os.path.join(BASE_DIR, 'keys')
 DB_PATH = os.path.join(BASE_DIR, 'app.db')
 
 # Flask secret key (used only for flash messages, not for session crypto)
-FLASK_SECRET = os.urandom(32).hex()
+FLASK_SECRET = os.environ.get('FLASK_SECRET', os.urandom(32).hex())
 
 # Session duration in hours
 SESSION_DURATION_HOURS = 24
@@ -20,7 +20,7 @@ RSA_KEY_BITS = 1024
 
 # Email configuration (Gmail SMTP)
 EMAIL_SENDER = 'secureappproj@gmail.com'
-EMAIL_APP_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', '') or 'ucmj pyzh vxsn ksse'
+EMAIL_APP_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', '')
 SMTP_HOST = 'smtp.gmail.com'
 SMTP_PORT = 587
 

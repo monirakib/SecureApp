@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: secureapp
+    runtime: python
+    buildCommand: pip install -r requirements.txt && pip install gunicorn
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    disk:
+      name: data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
+    envVars:
+      - key: EMAIL_APP_PASSWORD
+        sync: false
+      - key: FLASK_SECRET
+        generateValue: true
