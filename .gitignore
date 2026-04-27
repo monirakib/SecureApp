@@ -1,4 +1,4 @@
-# Report generator and output
+# Report files - never commit
 generate_report.py
 *.pdf
 
