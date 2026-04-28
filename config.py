@@ -3,8 +3,11 @@
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-KEYS_DIR = os.path.join(BASE_DIR, 'keys')
-DB_PATH = os.path.join(BASE_DIR, 'app.db')
+# On Render, persistent data lives on the mounted disk (DATA_DIR env var).
+# Locally, it defaults to the project folder.
+DATA_DIR = os.environ.get('DATA_DIR', BASE_DIR)
+KEYS_DIR = os.path.join(DATA_DIR, 'keys')
+DB_PATH = os.path.join(DATA_DIR, 'app.db')
 
 # Flask secret key (used only for flash messages, not for session crypto)
 FLASK_SECRET = os.environ.get('FLASK_SECRET', os.urandom(32).hex())
@@ -25,7 +28,7 @@ SMTP_HOST = 'smtp.gmail.com'
 SMTP_PORT = 587
 
 # Upload configuration
-UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
+UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
 MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
 # Report categories

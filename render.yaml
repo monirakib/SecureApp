@@ -6,10 +6,12 @@ services:
     startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     disk:
       name: data
-      mountPath: /opt/render/project/src
+      mountPath: /opt/render/project/data
       sizeGB: 1
     envVars:
       - key: EMAIL_APP_PASSWORD
         sync: false
       - key: FLASK_SECRET
         generateValue: true
+      - key: DATA_DIR
+        value: /opt/render/project/data
