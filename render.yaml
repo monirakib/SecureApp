@@ -10,7 +10,7 @@ services:
       sizeGB: 1
     envVars:
       - key: EMAIL_APP_PASSWORD
-        sync: false
+        sync: true
       - key: FLASK_SECRET
         generateValue: true
       - key: DATA_DIR
