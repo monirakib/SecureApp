@@ -23,7 +23,7 @@ RSA_KEY_BITS = 1024
 
 # Email configuration (Gmail SMTP)
 EMAIL_SENDER = 'secureappproj@gmail.com'
-EMAIL_APP_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', '')
+EMAIL_APP_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', 'xpnx mjhf izvh vpfz')
 SMTP_HOST = 'smtp.gmail.com'
 SMTP_PORT = 587
 
