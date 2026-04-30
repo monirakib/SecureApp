@@ -285,3 +285,68 @@ def logout():
     response.delete_cookie('session_token')
     flash('You have been logged out.', 'info')
     return response
+
+
+@auth_bp.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+    if g.user:
+        if request.method == 'POST':
+            old_password = request.form.get('old_password', '')
+            new_password = request.form.get('new_password', '')
+            confirm_password = request.form.get('confirm_password', '')
+
+            # Validation
+            if not old_password or not new_password or not confirm_password:
+                flash('Old password, new password, and confirmation are required.', 'danger')
+                return render_template('change_password.html')
+
+            if len(new_password) < 6:
+                flash('Password must be at least 6 characters.', 'danger')
+                return render_template('change_password.html')
+
+            if new_password != confirm_password:
+                flash('Passwords do not match.', 'danger')
+                return render_template('change_password.html')
+
+            # Verify old password
+            password_hash = key_manager.hash_password(old_password, g.user['password_salt'])
+            if password_hash != g.user['password_hash']:
+                flash('Invalid old password.', 'danger')
+                return render_template('change_password.html')
+
+            # Change password
+            salt = secure_random_bytes(16).hex()
+            password_hash = key_manager.hash_password(new_password, salt)
+
+            # Generate ECC key pair for user
+            ecc_pub_str, ecc_priv_enc = key_manager.generate_user_ecc_keys()
+
+            # Compute data integrity HMAC
+            data_hmac = key_manager.compute_data_hmac(
+                g.user['username_hash'], g.user['email_hash'], password_hash
+            )
+
+            # Update user
+            user_id = db.create_user(
+                username_hash=g.user['username_hash'],
+                username_enc=g.user['username_enc'],
+                email_hash=g.user['email_hash'],
+                email_enc=g.user['email_enc'],
+                phone_enc=g.user['phone_enc'],
+                password_hash=password_hash,
+                password_salt=salt,
+                role='user',
+                ecc_public_key=ecc_pub_str,
+                ecc_private_key_enc=ecc_priv_enc,
+                data_hmac=data_hmac
+            )
+
+            if user_id:
+                flash('Password changed successfully.', 'success')
+                return redirect(url_for('auth.login'))
+            else:
+                flash('Password change failed. Username or email may already exist.', 'danger')
+
+        return render_template('change_password.html')
+
+    return redirect(url_for('auth.login'))
