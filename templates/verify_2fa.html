@@ -27,7 +27,7 @@
       </div>
       {% endif %}
 
-      <div style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text-muted);text-align:center;margin-bottom:22px;letter-spacing:1px;">⏱ code expires in {{ config.TWO_FA_EXPIRY_MINUTES if config else 5 }} minutes</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text-muted);text-align:center;margin-bottom:22px;letter-spacing:1px;">⏱ code expires in 5 minutes</div>
 
       <form method="POST" action="{{ url_for('auth.verify_2fa') }}">
         <div style="margin-bottom:24px;">

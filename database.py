@@ -1111,3 +1111,50 @@ def count_pending_friend_requests(user_id):
     ).fetchone()[0]
     conn.close()
     return count
+
+
+# ---- Bulk HMAC re-signing helpers ----
+
+_HMAC_RESIGN_TABLES = {'users', 'posts', 'messages', 'anonymous_tips', 'dead_drops', 'post_comments', 'documents'}
+
+
+def update_record_hmac(table, record_id, data_hmac):
+    """Update the data_hmac column for a single record. Table must be whitelisted."""
+    if table not in _HMAC_RESIGN_TABLES:
+        raise ValueError(f"Table '{table}' is not allowed for HMAC update")
+    conn = get_db()
+    conn.execute(f"UPDATE {table} SET data_hmac = ? WHERE id = ?", (data_hmac, record_id))
+    conn.commit()
+    conn.close()
+
+
+def get_all_messages_for_rotation():
+    """Return id, subject_enc, content_enc, sender_id for every message."""
+    conn = get_db()
+    rows = conn.execute("SELECT id, subject_enc, content_enc, sender_id FROM messages").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_all_dead_drops_for_rotation():
+    """Return id, title_enc, content_enc, access_code_hash for every dead drop."""
+    conn = get_db()
+    rows = conn.execute("SELECT id, title_enc, content_enc, access_code_hash FROM dead_drops").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_all_post_comments_for_rotation():
+    """Return id, content_enc, post_id for every post comment."""
+    conn = get_db()
+    rows = conn.execute("SELECT id, content_enc, post_id FROM post_comments").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_all_documents_for_rotation():
+    """Return id, original_filename_enc, stored_filename for every document."""
+    conn = get_db()
+    rows = conn.execute("SELECT id, original_filename_enc, stored_filename FROM documents").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]

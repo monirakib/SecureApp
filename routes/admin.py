@@ -244,15 +244,66 @@ def rotate_rsa_keys():
 @admin_bp.route('/keys/rotate-hmac', methods=['POST'])
 @admin_required
 def rotate_hmac_keys():
-    """Rotate HMAC keys. Note: existing HMACs will no longer verify until data is re-signed."""
+    """Rotate HMAC keys and re-sign every existing record with the new key."""
     csrf = request.form.get('csrf_token', '')
     if csrf != g.csrf_token:
         abort(403)
 
     try:
         key_manager.rotate_hmac_keys()
+
+        # Re-sign all users
+        for user in db.get_all_users():
+            new_hmac = key_manager.compute_data_hmac(
+                user['username_hash'], user['email_hash'], user['password_hash']
+            )
+            db.update_record_hmac('users', user['id'], new_hmac)
+
+        # Re-sign all posts
+        all_posts = db.get_all_posts()
+        for post in all_posts:
+            new_hmac = key_manager.compute_data_hmac(
+                post['title_enc'], post['content_enc'], post['user_id']
+            )
+            db.update_record_hmac('posts', post['id'], new_hmac)
+
+        # Re-sign all messages
+        for msg in db.get_all_messages_for_rotation():
+            new_hmac = key_manager.compute_data_hmac(
+                msg['subject_enc'], msg['content_enc'], msg['sender_id']
+            )
+            db.update_record_hmac('messages', msg['id'], new_hmac)
+
+        # Re-sign all anonymous tips
+        for tip in db.get_all_tips():
+            new_hmac = key_manager.compute_data_hmac(
+                tip['title_enc'], tip['content_enc'], tip['codename']
+            )
+            db.update_record_hmac('anonymous_tips', tip['id'], new_hmac)
+
+        # Re-sign all dead drops
+        for drop in db.get_all_dead_drops_for_rotation():
+            new_hmac = key_manager.compute_data_hmac(
+                drop['title_enc'], drop['content_enc'], drop['access_code_hash']
+            )
+            db.update_record_hmac('dead_drops', drop['id'], new_hmac)
+
+        # Re-sign all post comments
+        for comment in db.get_all_post_comments_for_rotation():
+            new_hmac = key_manager.compute_data_hmac(
+                comment['content_enc'], str(comment['post_id'])
+            )
+            db.update_record_hmac('post_comments', comment['id'], new_hmac)
+
+        # Re-sign all documents
+        for doc in db.get_all_documents_for_rotation():
+            new_hmac = key_manager.compute_data_hmac(
+                doc['original_filename_enc'], doc['stored_filename']
+            )
+            db.update_record_hmac('documents', doc['id'], new_hmac)
+
         db.log_key_rotation('HMAC', g.user['id'])
-        flash('HMAC keys rotated. New HMAC will be applied to data on next write.', 'success')
+        flash('HMAC keys rotated and all records re-signed successfully.', 'success')
     except Exception as e:
         flash(f'HMAC key rotation failed: {str(e)}', 'danger')
 

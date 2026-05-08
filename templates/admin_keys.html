@@ -47,7 +47,7 @@
         <div style="font-family:'Orbitron',sans-serif;font-size:0.75rem;letter-spacing:3px;color:var(--green);margin-bottom:10px;">⬡ HMAC KEYS</div>
         <p style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:var(--text-secondary);margin-bottom:8px;">HMAC keys verify data integrity on posts, messages, and user records.</p>
         <p style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-muted);margin-bottom:16px;">
-          After rotation, existing HMAC signatures will not match until data is re-written. New data uses new keys automatically.
+          After rotation, all existing records (posts, messages, tips, dead drops, comments, documents, and user accounts) are automatically re-signed with the new keys. No data is lost or invalidated.
         </p>
         <form method="POST" action="{{ url_for('admin.rotate_hmac_keys') }}"
               onsubmit="return confirm('HMAC rotation will invalidate existing integrity checks. Proceed?')">
