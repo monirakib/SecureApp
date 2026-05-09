@@ -6,8 +6,8 @@
 
 | # | Name | Student ID |
 |---|---|---|
-| 1 | Nusrat Jahan Madhurzo | 24241129 |
-| 2 | A. H. B. Sirajul Monir Akib | 24241373 |
+| 1 | A. H. B. Sirajul Monir Akib | 24241373 |
+| 2 | Nusrat Jahan Madhurzo | 24241129 |
 
 ---
 
